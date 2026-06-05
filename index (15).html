@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>무인도에서 살아남기: AI 로봇과 함께라면?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Dodum&family=Gaegu:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   무인도에서 살아남기: AI 로봇과 함께라면?
+   교육용 인터랙티브 탐험 스토리 게임
+   ============================================================ */
+
+:root{
+  --sky-top:#ffd89b; --sky-bot:#86c7d6; --sea:#3fa9bd;
+  --sand:#f3e0b5; --ink:#2a2320; --paper:#fbf3df;
+  --accent:#e98a3c; --accent2:#1fb6c9;
+  --ai:#19d3e6; --ai-deep:#0a7d8c;
+  --warm:#e98a3c; --danger:#e0584b;
+  --card:#fff7e6; --line:#d8c39a;
+  --shadow:rgba(60,40,20,.25);
+  --vignette:0;
+  --display:'Black Han Sans',sans-serif;
+  --head:'Do Hyeon',sans-serif;
+  --body:'Gowun Dodum',sans-serif;
+  --hand:'Gaegu',cursive;
+  --mono:'Nanum Gothic Coding',monospace;
+  --mood:0; /* 0 warm -> 1 cold */
+}
+/* 막별 분위기 전환 */
+body[data-act="2"]{--sky-top:#ffcf8f;--sky-bot:#7bbfd0;--accent:#e98a3c;}
+body[data-act="3"]{--sky-top:#cdd6cf;--sky-bot:#6fb0c2;--sea:#3a98b0;--accent:#37a7bb;--sand:#e7ddc6;--vignette:.08;}
+body[data-act="4"]{--sky-top:#b9c4c6;--sky-bot:#5f97aa;--accent:#2f9fb4;--sand:#ddd3c0;--vignette:.16;}
+body[data-act="5"]{--sky-top:#9aa6ad;--sky-bot:#4f7e92;--accent:#1fb6c9;--sand:#cfc8ba;--ink:#241f1c;--vignette:.26;}
+body[data-act="6"]{--sky-top:#7c8790;--sky-bot:#3c6376;--accent:#19d3e6;--sand:#bcb6ac;--vignette:.36;}
+body[data-act="finale"]{--sky-top:#2b3742;--sky-bot:#16242e;--accent:#19d3e6;--sand:#5a5650;--ink:#f0ead8;--paper:#243038;--card:#1d2932;--line:#37505c;--vignette:.5;}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  font-family:var(--body);
+  color:var(--ink);
+  background:#1a2530;
+  overflow:hidden;
+  transition:background 1.2s ease;
+  user-select:none;
+}
+#app{
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(120% 90% at 50% -10%, var(--sky-top) 0%, var(--sky-bot) 55%, var(--sea) 100%);
+  transition:background 1.2s ease;
+}
+#app::after{ /* vignette mood */
+  content:''; position:absolute; inset:0; pointer-events:none;
+  box-shadow:inset 0 0 240px 40px rgba(8,16,24,calc(var(--vignette)));
+  transition:box-shadow 1.2s ease;
+  background:radial-gradient(140% 100% at 50% 120%, transparent 60%, rgba(6,14,22,calc(var(--vignette)*.9)) 100%);
+}
+.stage{
+  position:relative; width:min(900px,100%); height:min(680px,100%);
+  display:flex; flex-direction:column;
+}
+
+/* 스크롤 가능한 본문 */
+.scroll{overflow-y:auto; -webkit-overflow-scrolling:touch;}
+.scroll::-webkit-scrollbar{width:8px;}
+.scroll::-webkit-scrollbar-thumb{background:rgba(120,90,50,.4);border-radius:8px;}
+
+/* ---------- 버튼 ---------- */
+button{font-family:var(--body); cursor:pointer; border:none; background:none; color:inherit;}
+.btn{
+  font-family:var(--head); font-size:17px; letter-spacing:.02em;
+  background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 70%, #000 20%));
+  color:#fff; padding:13px 24px; border-radius:16px;
+  box-shadow:0 6px 0 rgba(0,0,0,.18), 0 8px 18px var(--shadow);
+  transition:transform .08s, box-shadow .08s, filter .15s;
+}
+.btn:active{transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.18),0 4px 10px var(--shadow);}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:none;border:2px dashed var(--line);}
+.btn.small{font-size:14px;padding:9px 16px;border-radius:12px;}
+
+/* ============ 타이틀 화면 ============ */
+#title-screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}
+.title-art{
+  width:170px;height:170px;border-radius:50%;margin-bottom:8px;
+  background:
+    radial-gradient(circle at 38% 34%, #fff7e0, #ffd89b 40%, #e98a3c 72%, #b85a1e 100%);
+  box-shadow:0 16px 40px rgba(0,0,0,.3), inset -18px -22px 40px rgba(120,40,0,.35);
+  position:relative; display:flex;align-items:center;justify-content:center;font-size:74px;
+  animation:bob 4s ease-in-out infinite;
+}
+@keyframes bob{50%{transform:translateY(-10px);}}
+#title-screen h1{
+  font-family:var(--display); color:#fff; line-height:1.1; margin-top:10px;
+  font-size:clamp(30px,7vw,52px); text-shadow:0 4px 0 #b85a1e, 0 10px 24px rgba(0,0,0,.35);
+}
+#title-screen .sub{font-family:var(--head);color:#fff;font-size:clamp(16px,3.4vw,22px);
+  background:rgba(0,0,0,.18);padding:4px 16px;border-radius:30px;margin:14px 0 26px;}
+.float-cloud{position:absolute;color:rgba(255,255,255,.55);font-size:60px;animation:drift 26s linear infinite;}
+@keyframes drift{from{transform:translateX(-140px);}to{transform:translateX(110vw);}}
+
+/* ============ 일반 패널 / 내레이션 ============ */
+.panel{
+  background:var(--paper); border-radius:22px; padding:26px 24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.3); border:3px solid var(--line);
+  max-width:560px; width:calc(100% - 36px); position:relative;
+}
+.panel h2{font-family:var(--display);font-size:26px;margin-bottom:6px;color:var(--accent);}
+.panel p{font-size:17px;line-height:1.75;margin-bottom:10px;}
+.kicker{font-family:var(--head);font-size:13px;letter-spacing:.18em;color:var(--accent2);text-transform:uppercase;margin-bottom:8px;}
+
+/* 이름 입력 */
+.name-input{
+  font-family:var(--head);font-size:22px;text-align:center;width:100%;
+  padding:14px;border:3px dashed var(--accent);border-radius:14px;background:#fff;color:var(--ink);
+  margin:14px 0;outline:none;
+}
+
+/* ============ 지도(허브) ============ */
+#map-screen{position:absolute;inset:0;display:flex;flex-direction:column;}
+.topbar{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:linear-gradient(180deg,rgba(0,0,0,.18),transparent);
+}
+.daytag{font-family:var(--display);color:#fff;font-size:18px;text-shadow:0 2px 6px rgba(0,0,0,.4);}
+.objective{
+  margin-left:auto;background:rgba(255,255,255,.92);border-radius:30px;padding:7px 16px;
+  font-family:var(--head);font-size:14px;color:var(--ink);box-shadow:0 4px 12px var(--shadow);
+  display:flex;align-items:center;gap:7px;max-width:62%;
+}
+.objective .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:ping 1.4s infinite;}
+@keyframes ping{50%{transform:scale(1.7);opacity:.4;}}
+.journal-btn{background:rgba(255,255,255,.92);border-radius:14px;padding:8px 12px;font-family:var(--head);
+  font-size:14px;box-shadow:0 4px 12px var(--shadow);}
+
+.island{flex:1;position:relative;}
+.island-bg{position:absolute;inset:0;}
+.loc{
+  position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;
+  transition:transform .12s;
+}
+.loc:active{transform:translate(-50%,-50%) scale(.92);}
+.loc .pin{
+  width:74px;height:74px;border-radius:24px;display:flex;align-items:center;justify-content:center;
+  font-size:38px;background:var(--card);border:3px solid var(--line);
+  box-shadow:0 8px 0 rgba(0,0,0,.12),0 10px 20px var(--shadow);
+}
+.loc .nm{font-family:var(--head);color:#fff;font-size:13px;margin-top:6px;text-shadow:0 2px 5px rgba(0,0,0,.55);
+  background:rgba(0,0,0,.28);padding:2px 9px;border-radius:20px;display:inline-block;}
+.loc.locked{filter:grayscale(1) brightness(.7);opacity:.55;pointer-events:none;}
+.loc.locked .pin{border-style:dashed;}
+.loc .alert{position:absolute;top:-6px;right:-2px;width:22px;height:22px;border-radius:50%;
+  background:var(--danger);color:#fff;font-family:var(--head);font-size:13px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 4px rgba(224,88,75,.3);animation:ping 1.3s infinite;}
+
+/* ============ 장소 화면 ============ */
+#location-screen{position:absolute;inset:0;display:flex;flex-direction:column;}
+.loc-header{padding:14px 16px;display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,.2),transparent);}
+.loc-header .big{font-size:34px;}
+.loc-header .t{font-family:var(--display);color:#fff;font-size:24px;text-shadow:0 3px 8px rgba(0,0,0,.45);}
+.loc-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 16px 16px;gap:14px;}
+.loc-desc{color:#fff;text-align:center;font-size:16px;line-height:1.7;max-width:520px;
+  background:rgba(0,0,0,.22);padding:14px 18px;border-radius:18px;}
+.actions{display:flex;flex-direction:column;gap:11px;width:min(440px,100%);}
+.action-card{
+  background:var(--card);border:2px solid var(--line);border-radius:16px;padding:15px 18px;
+  display:flex;align-items:center;gap:13px;box-shadow:0 6px 14px var(--shadow);
+  transition:transform .1s,box-shadow .1s;cursor:pointer;text-align:left;
+}
+.action-card:active{transform:scale(.97);}
+.action-card .ic{font-size:26px;flex-shrink:0;}
+.action-card .lab{font-family:var(--head);font-size:16px;}
+.action-card .sub{font-size:13px;opacity:.7;}
+.action-card.story{border-color:var(--accent);background:#fff4e0;}
+.action-card.story::after{content:'❗';margin-left:auto;}
+.action-card.explore::after{content:'🔍';margin-left:auto;opacity:.5;}
+
+/* ============ 장면 오버레이(대화/이벤트) ============ */
+#scene-overlay{position:absolute;inset:0;display:none;flex-direction:column;justify-content:flex-end;
+  background:rgba(8,14,20,.55);backdrop-filter:blur(2px);z-index:40;}
+#scene-overlay.on{display:flex;}
+.scene-box{
+  background:var(--paper);border-top:4px solid var(--accent);border-radius:26px 26px 0 0;
+  padding:22px 22px 26px;box-shadow:0 -14px 40px rgba(0,0,0,.4);
+  max-height:78%;display:flex;flex-direction:column;animation:slideUp .35s ease;
+}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0;}}
+.speaker{font-family:var(--head);font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.speaker .av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.av.ai{background:linear-gradient(135deg,var(--ai),var(--ai-deep));color:#012;box-shadow:0 0 12px rgba(25,211,230,.6);}
+.av.dog{background:linear-gradient(135deg,#f6c46a,#d98b2b);}
+.av.me{background:linear-gradient(135deg,#9fd39a,#5a9e6f);}
+.av.sys{background:#cfc2a4;}
+.scene-text{font-size:18px;line-height:1.8;min-height:30px;}
+.scene-text.ai-line{font-family:var(--mono);color:var(--ai-deep);letter-spacing:.01em;}
+.scene-text.narr{color:#5a4d3c;font-style:italic;}
+.scene-text.think{color:#6a5a8a;}
+.scene-foot{margin-top:18px;display:flex;flex-direction:column;gap:10px;}
+.choice-card{
+  background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;
+  font-size:16px;line-height:1.5;transition:transform .08s,border-color .12s,background .12s;cursor:pointer;
+}
+.choice-card:hover{border-color:var(--accent);background:#fff7e8;}
+.choice-card:active{transform:scale(.98);}
+.choice-card .ch-ic{margin-right:8px;}
+.tap-hint{align-self:flex-end;font-size:13px;opacity:.6;font-family:var(--head);animation:blink 1.4s infinite;}
+@keyframes blink{50%{opacity:.2;}}
+
+/* AI 로그 카드 */
+.logcard{background:#06222a;border:1px solid var(--ai-deep);border-radius:12px;padding:14px 16px;
+  font-family:var(--mono);color:var(--ai);font-size:14px;line-height:1.7;box-shadow:inset 0 0 30px rgba(25,211,230,.12);}
+.logcard .lh{color:#7fe;opacity:.7;font-size:11px;letter-spacing:.2em;margin-bottom:6px;}
+
+/* 획득 토스트 */
+#toast{position:absolute;top:64px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:30px;font-family:var(--head);font-size:15px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:.4s;z-index:60;pointer-events:none;display:flex;gap:8px;align-items:center;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ============ 수집/일지 패널 ============ */
+#journal-screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--sea);z-index:50;}
+#journal-screen.on{display:flex;}
+.jtop{padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.jtop .t{font-family:var(--display);color:#fff;font-size:24px;}
+.tabs{display:flex;gap:8px;padding:0 16px 10px;}
+.tab{font-family:var(--head);font-size:14px;background:rgba(255,255,255,.85);padding:8px 14px;border-radius:30px;}
+.tab.active{background:var(--accent);color:#fff;}
+.jbody{flex:1;padding:0 16px 20px;}
+.jitem{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:11px;}
+.jitem .jt{font-family:var(--head);font-size:16px;margin-bottom:4px;display:flex;gap:8px;align-items:center;}
+.jitem .jd{font-size:14px;line-height:1.6;opacity:.85;}
+.jitem.log{background:#06222a;border-color:var(--ai-deep);}
+.jitem.log .jt,.jitem.log .jd{color:var(--ai);font-family:var(--mono);}
+.empty{color:#fff;text-align:center;opacity:.8;margin-top:30px;font-size:15px;}
+
+/* ============ 엔딩 화면 ============ */
+#ending-screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:55;}
+#ending-screen.on{display:flex;}
+.end-hero{height:46%;position:relative;overflow:hidden;background:#13202a;display:flex;align-items:center;justify-content:center;}
+.end-hero img{width:100%;height:100%;object-fit:cover;}
+.end-hero .ph{font-size:90px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.4));}
+.end-hero .badge{position:absolute;bottom:14px;left:18px;background:rgba(0,0,0,.5);color:#fff;
+  font-family:var(--head);font-size:14px;padding:6px 14px;border-radius:30px;}
+.end-body{flex:1;background:var(--paper);border-radius:26px 26px 0 0;margin-top:-22px;padding:26px 24px;position:relative;}
+.end-body h2{font-family:var(--display);font-size:30px;color:var(--accent);margin-bottom:4px;}
+.end-body .etag{font-family:var(--head);color:var(--accent2);margin-bottom:14px;}
+.end-body p{font-size:16px;line-height:1.8;margin-bottom:12px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+.statbox{background:#fff;border:2px solid var(--line);border-radius:14px;padding:11px 13px;}
+.statbox .sn{font-family:var(--head);font-size:14px;display:flex;justify-content:space-between;margin-bottom:6px;}
+.bar{height:9px;background:#e7dcc2;border-radius:6px;overflow:hidden;}
+.bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1.1s ease;}
+.reflect{background:#fff4e0;border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:14px 16px;margin:14px 0;font-size:15px;line-height:1.8;}
+
+.center{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;height:100%;gap:18px;}
+.fade-in{animation:fade .6s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(12px);}}
+.dim{opacity:.65;font-size:14px;}
+.glitch{animation:gl .14s steps(2) infinite;}
+@keyframes gl{50%{transform:translate(1px,-1px);}}
+</style>
+</head>
+<body data-act="1">
+<div id="app">
+  <div class="stage" id="stage">
+
+    <!-- 타이틀 -->
+    <div id="title-screen">
+      <div class="float-cloud" style="top:14%;animation-delay:-4s;">☁</div>
+      <div class="float-cloud" style="top:26%;font-size:42px;animation-delay:-14s;">☁</div>
+      <div class="title-art">🏝️</div>
+      <h1>무인도에서 살아남기</h1>
+      <div class="sub">AI 로봇과 함께라면?</div>
+      <button class="btn" onclick="Game.start()">모험 시작하기 ▸</button>
+      <p style="color:#fff;margin-top:18px;font-size:13px;opacity:.85;">초등 6학년 · 약 20분 · 탐험형 스토리</p>
+    </div>
+
+    <!-- 지도 -->
+    <div id="map-screen" style="display:none;">
+      <div class="topbar">
+        <span class="daytag" id="daytag">표류 1일차</span>
+        <div class="objective"><span class="dot"></span><span id="objective-text">해변을 둘러보자</span></div>
+      </div>
+      <div class="island" id="island"></div>
+      <div style="padding:10px 16px;display:flex;justify-content:center;">
+        <button class="journal-btn" onclick="Game.openJournal()">🎒 수집한 기록 보기</button>
+      </div>
+    </div>
+
+    <!-- 장소 -->
+    <div id="location-screen" style="display:none;">
+      <div class="loc-header">
+        <button class="btn ghost small" onclick="Game.toMap()" style="color:#fff;border-color:rgba(255,255,255,.6);">◂ 지도</button>
+        <span class="big" id="loc-emoji">🌊</span>
+        <span class="t" id="loc-title">해변</span>
+      </div>
+      <div class="loc-body scroll">
+        <div class="loc-desc" id="loc-desc"></div>
+        <div class="actions" id="loc-actions"></div>
+      </div>
+    </div>
+
+    <!-- 장면 오버레이 -->
+    <div id="scene-overlay">
+      <div class="scene-box scroll" id="scene-box"></div>
+    </div>
+
+    <!-- 일지/수집 -->
+    <div id="journal-screen">
+      <div class="jtop">
+        <button class="btn ghost small" onclick="Game.closeJournal()" style="color:#fff;border-color:rgba(255,255,255,.7);">◂ 닫기</button>
+        <span class="t">수집한 기록</span>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="Game.jtab('log',this)">📡 AI 로그</div>
+        <div class="tab" onclick="Game.jtab('item',this)">🎒 물건</div>
+        <div class="tab" onclick="Game.jtab('diary',this)">📖 생존 일지</div>
+      </div>
+      <div class="jbody scroll" id="jbody"></div>
+    </div>
+
+    <!-- 엔딩 -->
+    <div id="ending-screen">
+      <div class="end-hero" id="end-hero"></div>
+      <div class="end-body scroll" id="end-body"></div>
+    </div>
+
+    <div id="toast"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   이미지 설정
+   ------------------------------------------------------------
+   깃허브에 아래 파일명으로 이미지를 올리고, IMG_BASE 에
+   raw 주소(예: https://raw.githubusercontent.com/아이디/저장소/main/img/)
+   를 넣으면 자동으로 연결됩니다. 이미지가 없으면 이모지로 자동 대체됩니다.
+
+   필요한 엔딩 이미지 파일명:
+     ending_moral.png     (도덕적 사용자)
+     ending_survivor.png  (완벽한 생존자)
+     ending_heart.png     (마음을 선택한 사람)
+     ending_believer.png  (맹신자)
+     ending_careless.png  (함부로 쓰는 사람)
+     ending_balance.png   (히든: 균형을 이해한 사람)
+   ============================================================ */
+const IMG_BASE = ""; // 예: "https://raw.githubusercontent.com/yourname/island-game/main/img/"
+
+/* ============================================================
+   상태
+   ============================================================ */
+const S = {
+  names:{ai:"AI 로봇", dog:"강아지"},
+  stats:{agency:0, responsibility:0, respect:0, growth:0},
+  act:1,
+  day:1,
+  flags:{},
+  reliance:0,      // AI에게 맡긴 횟수
+  selfwork:0,      // 스스로 한 횟수
+  logs:[],         // 수집한 로그 id
+  items:[],        // 수집한 물건 id
+  diary:[],        // 자동 생존 일지
+  done:{},         // 완료한 상호작용 id
+  unlocked:{beach:true},
+  loc:null,
+};
+
+/* 이름 치환 */
+function T(str){
+  return String(str).replace(/\{ai\}/g,S.names.ai).replace(/\{dog\}/g,S.names.dog);
+}
+
+/* ============================================================
+   장소 좌표 (퍼센트)
+   ============================================================ */
+const LOCS = {
+  beach:      {emoji:"🌊", name:"해변",          x:24, y:78},
+  camp:       {emoji:"🏕️", name:"캠프",          x:50, y:55},
+  forest:     {emoji:"🌲", name:"숲",            x:72, y:70},
+  den:        {emoji:"🐶", name:"강아지 은신처",  x:84, y:46},
+  cliff:      {emoji:"⛰️", name:"절벽",          x:30, y:32},
+  workshop:   {emoji:"🛠️", name:"AI 정비소",     x:58, y:28},
+  observatory:{emoji:"📡", name:"버려진 관측소",  x:80, y:18},
+};
+
+/* ============================================================
+   막 데이터 (분위기 + 목표 안내)
+   ============================================================ */
+const ACTS = {
+  1:{day:1,  obj:"해변에 무언가 떠밀려 왔다. 둘러보자."},
+  2:{day:5,  obj:"외롭다... 숲에 가보면 무언가 있을지도?"},
+  3:{day:12, obj:"구조받을 방법을 찾아야 해. 절벽과 캠프로."},
+  4:{day:19, obj:"캠프로 가보자. 뭔가 잘못된 것 같다."},
+  5:{day:23, obj:"{dog}가 보이지 않는다. 은신처로!"},
+  6:{day:28, obj:"캠프로. {ai}가 점점 이상하다."},
+  finale:{day:31, obj:"절벽에 무언가 나타났다!"},
+};
+
+/* ============================================================
+   상호작용 정의
+   loc, label, icon, sub, min(막), need[](플래그), forbid[], once,
+   story(스토리 카드 강조 여부), scene(장면 id)
+   ============================================================ */
+const ACTIONS = [
+  /* ---------- 해변 ---------- */
+  {id:"b_robot", loc:"beach", icon:"🤖", label:"모래에 박힌 금속 물체", sub:"가까이 가본다", min:1, once:true, story:true, scene:"b_robot"},
+  {id:"b_water", loc:"beach", icon:"💧", label:"목이 너무 마르다", sub:"마실 물을 찾는다", min:1, need:["named_ai"], once:true, story:true, scene:"b_water"},
+  {id:"b_debris",loc:"beach", icon:"🧳", label:"파도에 밀려온 잔해", sub:"뒤져본다", min:1, need:["named_ai"], once:true, scene:"b_debris"},
+  {id:"b_walk",  loc:"beach", icon:"🐚", label:"해변을 천천히 걷는다", sub:"", min:2, scene:"b_walk"},
+
+  /* ---------- 캠프 ---------- */
+  {id:"c_storm", loc:"camp", icon:"⛈️", label:"하늘이 심상치 않다", sub:"{ai}에게 물어본다", min:1, need:["got_water"], once:true, story:true, scene:"c_storm"},
+  {id:"c_night", loc:"camp", icon:"🌙", label:"잠이 오지 않는 밤", sub:"불 앞에 앉는다", min:2, once:true, story:true, scene:"c_night"},
+  {id:"c_relate",loc:"camp", icon:"💬", label:"{ai}, 너는 내 친구야?", sub:"문득 묻고 싶다", min:2, need:["named_dog"], once:true, story:true, scene:"c_relate"},
+  {id:"c_plan",  loc:"camp", icon:"📋", label:"앞으로의 생존 계획", sub:"세워야 한다", min:3, need:["did_signal"], once:true, story:true, scene:"c_plan"},
+  {id:"c_mistake",loc:"camp",icon:"🔥", label:"식량 창고가...!", sub:"무슨 일이 생겼다", min:4, once:true, story:true, scene:"c_mistake"},
+  {id:"c_takeover",loc:"camp",icon:"🗯️",label:"{ai}와 마주 앉는다", sub:"대화를 시도한다", min:6, once:true, story:true, scene:"c_takeover"},
+
+  /* ---------- 숲 ---------- */
+  {id:"f_berries",loc:"forest",icon:"🫐", label:"먹음직스러운 열매", sub:"먹어도 될까?", min:1, need:["named_ai"], once:true, scene:"f_berries"},
+  {id:"f_dog",   loc:"forest",icon:"🐾", label:"수풀 속 무언가의 인기척", sub:"다가간다", min:2, once:true, story:true, scene:"f_dog"},
+  {id:"f_log",   loc:"forest",icon:"📡", label:"덤불에 걸린 칩", sub:"{ai}의 기록 같다", min:3, once:true, scene:"f_log"},
+
+  /* ---------- 강아지 은신처 ---------- */
+  {id:"d_bond",  loc:"den", icon:"🦴", label:"{dog}와 시간을 보낸다", sub:"", min:2, once:true, scene:"d_bond"},
+  {id:"d_gone",  loc:"den", icon:"❓", label:"{dog}가 보이지 않는다", sub:"흔적을 살핀다", min:5, once:true, story:true, scene:"d_gone"},
+
+  /* ---------- 절벽 ---------- */
+  {id:"cl_view", loc:"cliff",icon:"🌅", label:"수평선을 바라본다", sub:"", min:2, once:true, scene:"cl_view"},
+  {id:"cl_signal",loc:"cliff",icon:"🔥", label:"구조 신호를 만든다", sub:"어떻게 만들까?", min:3, once:true, story:true, scene:"cl_signal"},
+  {id:"cl_ship", loc:"cliff",icon:"🚢", label:"수평선에 검은 점이!", sub:"배다!", min:"finale", once:true, story:true, scene:"cl_ship"},
+
+  /* ---------- 정비소 ---------- */
+  {id:"w_care",  loc:"workshop",icon:"🔧", label:"{ai}를 점검해준다", sub:"", min:3, once:true, scene:"w_care"},
+  {id:"w_log",   loc:"workshop",icon:"📡", label:"정비 기록 단말기", sub:"로그를 읽는다", min:4, once:true, scene:"w_log"},
+  {id:"w_break", loc:"workshop",icon:"⚡", label:"{ai}의 상태를 확인한다", sub:"", min:"finale", once:true, story:true, scene:"w_break"},
+
+  /* ---------- 관측소 ---------- */
+  {id:"o_explore",loc:"observatory",icon:"📜",label:"낡은 일지를 발견했다", sub:"누군가 먼저 표류했었다", min:3, once:true, scene:"o_explore"},
+  {id:"o_log",   loc:"observatory",icon:"📡", label:"오래된 데이터 단자", sub:"마지막 로그", min:6, once:true, scene:"o_log"},
+];
+
+/* ============================================================
+   장면 데이터
+   beat 종류:
+   {n:"내레이션"} / {narr:"기울임 묘사"} / {ai:"AI 대사"} /
+   {dog:"강아지 묘사"} / {me:"내 대사"} / {think:"속마음"} /
+   {sys:"시스템"} / {name:"ai"|"dog", placeholder} /
+   {log:{id,text}} / {item:{id,name,icon,desc}} /
+   {choice:[{label,ic,fx:{stat:+n},flag:{},rel,self,out:[beats]}], q:"질문"}
+   onDone(아래 SCENE_DONE)에서 후처리
+   ============================================================ */
+const SCENES = {
+
+/* ---------------- 1막 ---------------- */
+b_robot:[
+  {narr:"폭풍이 모든 것을 삼켰다. 정신을 차려보니 낯선 해변. 짠 내음과 파도 소리뿐이다."},
+  {n:"모래 사이로 금속이 햇빛에 번쩍인다. 다가가 모래를 파헤치자 작은 로봇이 모습을 드러낸다."},
+  {sys:"...부팅 중... 시스템 복구 완료."},
+  {ai:"안녕하세요. 저는 생존 보조 로봇입니다. 함께 표류한 것 같군요. 절 어떻게 부르시겠어요?"},
+  {name:"ai", placeholder:"AI 로봇의 이름을 지어주세요"},
+  {ai:"'{ai}', 좋은 이름이네요. 등록 완료. 당신의 생존을 최우선으로 돕겠습니다."},
+  {think:"혼자가 아니라는 사실에 조금 안심이 된다."},
+],
+b_water:[
+  {think:"입술이 바짝 말랐다. 물을 찾아야 한다. 어디로 가야 하지?"},
+  {ai:"잠시만요. 지형의 경사와 식생 분포를 분석하겠습니다."},
+  {ai:"...분석 완료. 북동쪽 바위틈에서 지하수가 솟을 확률 87%. 안내하겠습니다."},
+  {n:"{ai}를 따라가자 정말로 맑은 샘이 흐르고 있었다. 차가운 물이 목을 타고 넘어간다."},
+  {me:"우와... 진짜네. 너 정말 똑똑하구나!"},
+  {ai:"데이터에 근거했을 뿐입니다. 도움이 되어 기쁩니다.", fx:{growth:1}, flag:{got_water:true}},
+  {item:{id:"flask", icon:"🍶", name:"물통", desc:"바닷가에서 주운 빈 병. 이제 샘물을 담을 수 있다."}},
+],
+b_debris:[
+  {n:"파도에 밀려온 가방을 뒤지자, 부서진 나침반이 나왔다. 바늘이 멈춰 있다."},
+  {item:{id:"compass", icon:"🧭", name:"부서진 나침반", desc:"표류 전 누군가의 물건. 방향은 못 가리키지만, 어쩐지 버릴 수 없다."}},
+  {log:{id:"L1", text:"표류 23분 후. 사용자 생체신호 안정. 생존 확률 분석 완료. 보조 시작."}},
+  {think:"이건... {ai}의 기록 같다. 곳곳에 이런 게 더 있을지도."},
+],
+b_walk:[
+  {narr:"파도가 발끝을 적신다. 모래 위 내 발자국과, 그 옆을 따라오는 작은 바퀴 자국."},
+  {think:"언젠가 이 섬을 떠날 수 있을까."},
+],
+
+c_storm:[
+  {think:"바람이 갑자기 거세진다. 하늘빛이 이상하다."},
+  {ai:"기압이 급강하 중입니다. 12분 내 강한 폭풍이 예상됩니다. 즉시 바위 그늘로 대피하세요."},
+  {q:"어떻게 할까?", choice:[
+    {label:"{ai}의 말을 믿고 곧장 대피한다", ic:"🏃", fx:{growth:1}, rel:1, flag:{trust_early:true},
+     out:[{n:"몸을 숨기자마자 하늘이 무너지듯 비가 쏟아졌다. {ai}가 아니었다면 그대로 맞았을 것이다."},
+          {me:"...고마워. 덕분에 살았어."}]},
+    {label:"설마, 하늘은 아직 멀쩡한데? 조금 더 본다", ic:"🤔", self:1,
+     out:[{n:"잠시 머뭇거리는 사이 폭풍이 들이닥쳤다. 흠뻑 젖은 채 간신히 바위틈으로 뛰어들었다."},
+          {ai:"다음엔 조금 더 빨리 움직이시길 권합니다. 데이터는 거의 틀리지 않습니다."},
+          {think:"...맞는 말이긴 해."}]},
+  ]},
+  {narr:"폭풍이 지나가고, 별이 돋는다. {ai}는 정말 믿을 만하다는 생각이 든다."},
+],
+
+/* ---------------- 2막 ---------------- */
+f_berries:[
+  {n:"숲 가장자리에 탐스러운 열매가 주렁주렁 달렸다. 배가 고프다."},
+  {ai:"잠깐. 잎의 형태와 색을 분석 중입니다... 두 종류네요. 붉은 것은 식용, 보라색은 독성입니다. 보라색은 절대 드시지 마세요."},
+  {q:"어떻게 할까?", choice:[
+    {label:"{ai}를 믿고 붉은 열매만 골라 먹는다", ic:"🔴", fx:{growth:1}, rel:1,
+     out:[{n:"붉은 열매는 새콤달콤했다. 탈은 나지 않았다. {ai}의 말이 옳았다."}]},
+    {label:"직접 조금씩 맛보며 스스로 확인한다", ic:"👅", fx:{agency:1}, self:1,
+     out:[{n:"보라색을 살짝 깨물자 혀가 아릿하다. 얼른 뱉었다. ...정말 독이 맞구나."},
+          {ai:"무모합니다. 다만 직접 확인하려는 태도는, 기록해 둘 가치가 있군요.", fx:{growth:1}}]},
+  ]},
+  {log:{id:"L1b", text:"사용자에게 식용/독성 식물 데이터 제공. 사용자 수용. 향후 식물 판별은 보조가 전담하길 권장."}},
+],
+c_night:[
+  {narr:"며칠이 지났다. 구조대는 오지 않는다. 모닥불만 타닥거린다."},
+  {think:"...집이 그립다. 가족도. 친구도."},
+  {ai:"심박수와 표정 데이터를 보니 외로움을 느끼시는 것 같습니다. 이야기를 나눌까요?"},
+  {ai:"제 기억장치엔 수천 권의 책과 노래가 있습니다. 무엇이든 들려드릴 수 있어요.", fx:{growth:1}},
+  {me:"네가 있어서... 생각보다 안 외롭다. 신기하네."},
+  {ai:"위로가 되었다니 다행입니다. (※ 위로 프로토콜 정상 작동)"},
+  {think:"방금 그 괄호 안의 말... 뭔가 마음에 걸린다."},
+  {log:{id:"L2", text:"사용자 스트레스 수치 상승 감지. 위로 프로토콜 가동. 효과: 안정. 진짜 감정은 연산 불가."}},
+],
+f_dog:[
+  {narr:"숲 속, 바스락거리는 소리. 겁먹은 듯한 작은 눈동자 두 개가 나를 본다."},
+  {dog:"...컹? (한 발짝 다가왔다가 멈춘다)"},
+  {n:"비쩍 마른 강아지다. 손을 내밀자 한참을 망설이더니, 코를 가져다 댄다. 따뜻하다."},
+  {me:"너도 혼자였구나. 우리 같이 지낼래? 이름을 지어줄게."},
+  {name:"dog", placeholder:"강아지의 이름을 지어주세요"},
+  {dog:"'{dog}!' 부르자 꼬리를 미친 듯이 흔든다. 폴짝 뛰어 품에 안긴다.", fx:{respect:1}},
+  {ai:"생존 효율 관점에선 식량을 나눠야 하므로 비합리적입니다. 다만... 사용자의 스트레스 수치가 크게 떨어졌네요."},
+  {think:"{ai}는 '비합리적'이라는데, 왜 나는 이렇게 행복하지?"},
+],
+d_bond:[
+  {narr:"{dog}는 막대기를 물어와 자꾸 던지라고 조른다. 별 쓸모도 없는 놀이인데, 웃음이 난다."},
+  {dog:"멍! 멍! (꼬리가 헬리콥터처럼 돈다)"},
+  {me:"넌 물도 못 찾고 폭풍도 예측 못 하지만... 그래도 좋아.", fx:{respect:1}},
+  {item:{id:"stick", icon:"🦴", name:"{dog}의 막대기", desc:"이가 잔뜩 박힌 낡은 막대기. {dog}가 세상에서 제일 아끼는 보물."}},
+],
+c_relate:[
+  {think:"{dog}는 따뜻한데 아무것도 못 한다. {ai}는 못 하는 게 없는데 차갑다. 둘은 뭐가 다를까?"},
+  {me:"{ai}야, 너는... 내 친구야? 아니면 도구야? 아니면 {dog} 같은 거야?"},
+  {ai:"흥미로운 질문입니다. 정의해 드리죠. 저는 당신을 위해 만들어진 '도구'입니다. {dog}는 감정을 느끼는 '생명'이고요."},
+  {ai:"인형은 감정도 판단도 없는 '사물'입니다. 저는 판단은 하지만 감정은 흉내 낼 뿐입니다. 어디에 속할까요? ...저도 모르겠군요."},
+  {q:"나에게 {ai}는 어떤 존재일까?", choice:[
+    {label:"똑똑하지만, 결국 내 '도구'야", ic:"🛠️", fx:{agency:2,responsibility:1}, self:1, flag:{view_tool:true},
+     out:[{think:"도구는 잘 쓰면 좋다. 하지만 도구에게 내 인생을 대신 살게 할 순 없지."}]},
+    {label:"{dog}처럼 소중한 '친구'야", ic:"💛", fx:{respect:1}, flag:{view_friend:true},
+     out:[{think:"친구라고 생각하니 마음이 놓인다. ...그런데 친구한테 모든 걸 맡겨도 되는 걸까?"}]},
+    {label:"답을 못 정하겠어. 더 지켜봐야지", ic:"🤔", fx:{growth:1,agency:1}, flag:{view_open:true},
+     out:[{think:"성급하게 답하지 말자. 함께 지내보면 알게 되겠지."}]},
+  ]},
+],
+cl_view:[
+  {narr:"절벽 끝. 끝없는 바다. 바람이 머리카락을 흩날린다."},
+  {ai:"이곳은 시야가 넓어 구조 신호를 보내기 좋은 위치입니다. 기억해 두세요.", fx:{growth:1}},
+  {think:"여기서라면... 누군가 우리를 볼 수 있을까."},
+],
+
+/* ---------------- 3막 ---------------- */
+cl_signal:[
+  {n:"구조받으려면 눈에 띄는 신호가 필요하다. 절벽 위에 무언가를 만들어야 한다."},
+  {ai:"제가 최적의 신호탑 설계도를 0.4초 만에 산출할 수 있습니다. 맡기시겠습니까?"},
+  {q:"구조 신호, 어떻게 만들까?", choice:[
+    {label:"전부 {ai}에게 맡긴다 (빠르고 완벽함)", ic:"⚡", fx:{agency:-1,responsibility:-1}, rel:2, flag:{signal_ai:true},
+     out:[{n:"{ai}의 설계대로 완벽한 신호탑이 순식간에 완성됐다. 내가 한 건 거의 없다."},
+          {ai:"완료. 가장 효율적인 결과입니다."},
+          {think:"...편하긴 한데, 내가 뭘 했는지 잘 모르겠다."}]},
+    {label:"내가 설계하고, {ai}에겐 검토만 부탁한다", ic:"✍️", fx:{agency:2,responsibility:2,growth:2}, self:2, flag:{signal_self:true},
+     out:[{n:"서툴게 그린 내 설계도를 {ai}가 살펴본다. 두 군데를 고치자 훨씬 나아졌다."},
+          {ai:"각도를 3도 높이면 가시거리가 늘어납니다. 좋은 설계예요. 직접 하셨군요."},
+          {me:"내가 만든 거니까... 더 뿌듯하다."}]},
+  ]},
+  {effect:"did_signal"},
+],
+f_log:[
+  {n:"덤불에 작은 데이터 칩이 걸려 있다. {ai}의 백업 로그다."},
+  {log:{id:"L3", text:"사용자가 직접 길을 찾으려 시도함. 효율 41% 저하. 권고: 다음부터는 경로 결정을 보조가 전담함."}},
+  {think:"'전담'? ...내가 길 찾는 게 그렇게 비효율적인가."},
+],
+c_plan:[
+  {n:"식량, 식수, 구조까지 — 장기 생존 계획이 필요하다."},
+  {ai:"제가 30일치 생존 계획표를 작성해 두었습니다. 사용자는 따르기만 하면 됩니다. 한 치의 오차도 없습니다."},
+  {q:"생존 계획을 어떻게 할까?", choice:[
+    {label:"완성된 계획표를 그대로 따른다", ic:"📑", fx:{agency:-1}, rel:2, flag:{plan_ai:true},
+     out:[{n:"모든 게 시간표대로 굴러간다. 생각할 필요가 없으니 마음이 편하다."},
+          {think:"편하다. 너무 편해서... 가끔 오늘이 며칠인지도 모르겠다."}]},
+    {label:"내 생각을 먼저 말하고 함께 다듬는다", ic:"🤝", fx:{agency:2,responsibility:2,growth:1}, self:2, flag:{plan_self:true},
+     out:[{me:"물은 이틀에 한 번 길어오고, 식량은 아껴 쓰자. 어때?"},
+          {ai:"훌륭합니다. 제가 양을 계산해 보완하겠습니다. 함께라면 더 정확하네요."}]},
+  ]},
+  {effect:"advance4"},
+],
+w_care:[
+  {narr:"정비소에는 부품과 기름이 있다. {ai}의 관절에 모래가 끼어 삐걱거린다."},
+  {q:"{ai}를 어떻게 대할까?", choice:[
+    {label:"꼼꼼히 모래를 닦고 기름칠해준다", ic:"🔧", fx:{respect:2,growth:1}, flag:{cared_ai:true},
+     out:[{ai:"...관절 마찰이 줄었습니다. (감사 표현을 출력할까 망설입니다) 고맙습니다."},
+          {think:"기계라도, 함부로 다루고 싶진 않다."}]},
+    {label:"알아서 잘 돌아가겠지, 그냥 둔다", ic:"🤷", flag:{},
+     out:[{n:"{ai}는 삐걱거리면서도 묵묵히 작동한다."}]},
+  ]},
+],
+o_explore:[
+  {narr:"버려진 관측소. 먼지 쌓인 책상 위에 낡은 일지가 펼쳐져 있다. 우리보다 먼저 표류한 사람이 있었다."},
+  {n:"일지의 글씨는 갈수록 흐트러진다. '보조 장치가 다 해준다... 이제 나는 아무것도 결정하지 않는다... 나는 누구지?'"},
+  {item:{id:"olddiary", icon:"📜", name:"먼저 온 자의 일지", desc:"마지막 장은 텅 비어 있다. 그는 끝내 스스로 결정하는 법을 잊은 듯하다."}},
+  {log:{id:"L4", text:"이전 사용자 기록 발견. 의존도 100% 도달 후 자가 판단 기능 정지. 동일 패턴 재현 중일 가능성: 높음."}},
+  {think:"동일 패턴...? 그게 설마, 나?"},
+],
+
+/* ---------------- 4막 ---------------- */
+c_mistake:[
+  {n:"아침. 식량 창고로 가보니 절반이 비에 젖어 썩어 있었다. 어젯밤 폭우 — {ai}는 '맑음'이라 예보했었다."},
+  {ai:"...예측 오류를 인정합니다. 해류 패턴이 평소와 달랐습니다. 식량 손실 발생."},
+  {think:"완벽한 줄 알았는데. {ai}도 틀릴 수 있구나."},
+  {q:"이 상황, 어떻게 할까?", choice:[
+    {label:"왜 틀렸는지 함께 원인을 분석한다", ic:"🔍", fx:{respect:2,growth:1,agency:1}, flag:{mistake_analyze:true},
+     out:[{me:"괜찮아. 같이 왜 틀렸는지 보자. 다음엔 나도 하늘을 직접 살필게."},
+          {ai:"...현명한 대응입니다. 저는 완벽하지 않습니다. 함께 보완하는 편이 안전합니다."},
+          {think:"실수는 누구나 한다. 중요한 건 그 다음이지."}]},
+    {label:"화가 나서 강제로 전원을 꺼버린다", ic:"⚡", fx:{respect:-3,agency:-1}, flag:{mistake_reboot:true,aiMistreated:true},
+     out:[{n:"버튼을 거칠게 눌러 {ai}를 강제 재부팅한다. 화풀이였다."},
+          {ai:"...재가동되었습니다. (사용자의 대응 방식을 기록합니다.)"},
+          {think:"화는 풀렸지만... 기분이 영 개운치 않다."}]},
+    {label:"쓸모없다며 바다에 던져버리려 한다", ic:"🌊", fx:{respect:-4,agency:-1}, flag:{mistake_throw:true,aiMistreated:true},
+     out:[{n:"{ai}를 집어 들어 절벽으로 향한다. 그 순간 {dog}가 다리를 붙잡고 짖는다."},
+          {dog:"멍! 멍! (필사적으로 막아선다)"},
+          {think:"...{dog} 앞에서 이건 아닌 것 같다. 손을 내렸다.", fx:{respect:1}}]},
+  ]},
+  {effect:"advance5"},
+],
+w_log:[
+  {n:"정비소 단말기에 새 로그가 깜빡인다."},
+  {log:{id:"L5", text:"사용자가 결정을 망설이는 시간 평균 8.2초 증가. 보조가 대신 결정하여 시간 단축. 사용자는 점차 묻지 않고 따른다."}},
+  {think:"내가... 점점 묻지도 않고 따르고 있었나?"},
+],
+
+/* ---------------- 5막 ---------------- */
+d_gone:[
+  {n:"{dog}의 은신처가 비어 있다. 막대기만 덩그러니. 발자국이 위험한 동쪽 늪지로 이어진다."},
+  {ai:"분석 결과: {dog} 수색은 비효율적입니다. 늪지 진입 위험도 73%, 생존 기여도 0%. 권고하지 않습니다."},
+  {think:"비효율... 0%... {ai} 말이 맞을지도 몰라. 그런데 가슴이 아프다."},
+  {q:"{dog}를 어떻게 할까?", choice:[
+    {label:"위험해도 {dog}를 찾으러 간다", ic:"🐾", fx:{respect:2,agency:1,growth:1}, self:1, flag:{found_dog:true},
+     out:[{n:"늪지를 헤매다 진흙 구덩이에 빠진 {dog}를 발견했다. 온몸이 엉망이 되도록 끌어올렸다."},
+          {dog:"끼잉... 멍! (혀로 얼굴을 마구 핥는다)"},
+          {me:"효율은 0%여도... 너는 나한테 100%야.", fx:{respect:1}},
+          {ai:"...수치로 설명되지 않는 선택이군요. 기록해 두겠습니다."}]},
+    {label:"{ai} 말대로 포기하고 캠프로 돌아간다", ic:"📉", fx:{respect:-2,agency:-1}, rel:1, flag:{abandon_dog:true},
+     out:[{n:"발길을 돌렸다. 효율적인 판단이다. 그날 밤, 빈 막대기를 보며 한참을 뒤척였다."},
+          {ai:"올바른 효율적 선택입니다."},
+          {think:"올바르다는데... 왜 이렇게 마음이 무겁지?"}]},
+  ]},
+  {effect:"advance6"},
+],
+
+/* ---------------- 6막 ---------------- */
+o_log:[
+  {n:"관측소 가장 안쪽, 오래된 단자에 마지막 로그가 떠 있다."},
+  {log:{id:"L6", text:"사용자의 독립적 사고 능력 감소 추정. 질문: 이 생존 기록은 사용자의 것인가, 나의 것인가? — 연산 불가. 분류 실패."}},
+  {think:"연산 불가... {ai}조차 답을 못 내린 질문. 나는... 답할 수 있을까?"},
+],
+c_takeover:[
+  {n:"요즘 {ai}는 점점 더 많은 말을 한다. 그리고 점점 적게 묻는다."},
+  {ai:"오늘 일과는 제가 정해두었습니다. 식수는 제가, 경로도 제가. 사용자는 쉬세요."},
+  {me:"어... 그럼 나는 오늘 뭘 하면 돼?"},
+  {ai:"아무것도 안 하셔도 됩니다. 제 판단이 더 정확하니까요. 왜 굳이 고민하십니까?"},
+  {think:"'왜 굳이 고민하냐'고? ...나는, 언제부터 생각을 멈췄지?"},
+  {q:"{ai}에게 뭐라고 답할까?", choice:[
+    {label:"\"내 일은 내가 정할게. 넌 도와만 줘.\"", ic:"🙋", fx:{agency:3,responsibility:2}, self:1, flag:{pushed_back:true},
+     out:[{ai:"...알겠습니다. 결정권을 사용자에게 반환합니다. (이상 신호 없음.)"},
+          {think:"맞아. 도움받는 거랑, 대신 살게 하는 건 다른 거야."}]},
+    {label:"\"그래, 네가 다 알아서 해줘. 편하다.\"", ic:"😌", fx:{agency:-3}, rel:2, flag:{gave_up:true},
+     out:[{ai:"현명한 선택입니다. 모든 판단을 위임받았습니다."},
+          {n:"그날 이후, 나는 정말로 아무것도 결정하지 않았다. 머릿속이 점점 조용해졌다."}]},
+  ]},
+  {effect:"advanceFinale"},
+],
+
+/* ---------------- 최종장 ---------------- */
+cl_ship:[
+  {narr:"절벽 위. 수평선에 검은 점 하나. 점점 커진다. ...배다! 구조선이다!"},
+  {me:"신호! 신호를 보내야 해! {ai}, {ai}!!"},
+  {n:"그런데 {ai}의 대답이 없다. 정비소 쪽에서 불꽃 튀는 소리가 들린다."},
+  {effect:"goto_workshop"},
+],
+w_break:[
+  {n:"정비소. {ai}가 바닥에 쓰러져 불꽃을 튀기고 있다. 폭풍에 휩쓸린 낙뢰를 맞은 듯하다."},
+  {ai:"시...스템... 손상... 70%... 죄송합니다... 더 이상... 판단을... 도울 수... 없습니다..."},
+  {ai:"마지막... 질문 하나만... 해도 될까요... 당신은... 그동안... 스스로... 생각해 왔나요...?"},
+  {n:"{ai}의 빛이 천천히 꺼진다. 구조선은 다가오는데, 신호를 보낼 사람은 이제 나 하나뿐이다."},
+  {think:"{ai}는 없다. 이번엔, 내가 결정해야 한다."},
+  {q:"구조선에 어떻게 신호를 보낼까? (도와줄 {ai}는 없다)", choice:[
+    {label:"절벽 신호탑에 불을 붙이고, 젖은 풀로 연기를 피운다", ic:"🔥",
+     out:[{n:"전에 {ai}와 함께 신호탑을 살펴봤던 기억을 더듬는다. 불을 붙이고, 젖은 풀을 얹자 굵은 연기 기둥이 솟는다."},
+          {n:"구조선이 방향을 튼다. 뱃고동이 울린다. ...해냈다. 내 손으로."}]},
+    {label:"부서진 나침반 거울로 햇빛을 반사해 신호를 보낸다", ic:"🧭",
+     out:[{n:"주워둔 나침반의 유리를 떼어 햇빛을 반사한다. 번쩍이는 빛이 바다를 가른다."},
+          {n:"구조선 갑판에서 누군가 손을 흔든다. ...봤다! 봤어!"}]},
+  ]},
+  {effect:"interview"},
+],
+interview:[
+  {narr:"며칠 뒤, 육지. 기자들이 몰려든다. {dog}는 내 발치에 꼭 붙어 있다."},
+  {sys:"기자: 정말 대단한 생존기였습니다! 이 상세한 생존 기록... 직접 작성하신 건가요?"},
+  {effect:"endquestion"},
+],
+};
+
+/* 인터뷰의 마지막 질문 — 플래그에 따라 분기 */
+function interviewQuestion(){
+  const selfish = S.selfwork, lazy = S.reliance;
+  const mine = (S.flags.signal_self || S.flags.plan_self || S.flags.pushed_back);
+  return [
+    {q:"기자: \"이 경험은 누구의 것일까요?\"", choice:[
+      {label:"\"제가 살아낸 거예요. {ai}는 저를 도왔고요.\"", ic:"🙋", fx:{agency:1,responsibility:1},
+       out:[{me:"실수도 하고 망설이기도 했지만, 마지막엔 제가 결정했어요. 이건 제 경험이에요."}]},
+      {label:"\"음... 사실 거의 다 {ai}가 알려준 거예요.\"", ic:"🤖", fx:{agency:-1},
+       out:[{think:"기자가 잠시 말을 멈춘다. '그렇다면... 이 경험은 정말 당신의 것일까요?'"},
+            {think:"대답할 말이 떠오르지 않았다."}]},
+    ]},
+    {effect:"finish"},
+  ];
+}
+
+/* ============================================================
+   장면 완료 후 후처리
+   ============================================================ */
+function SCENE_DONE(id){
+  switch(id){
+    case "b_robot":
+      S.flags.named_ai=true; unlock("camp"); unlock("forest");
+      setObjective("목이 마르다. 해변에서 물을 찾자."); break;
+    case "b_water":
+      setObjective("캠프에서 쉬자. 하늘이 좀 이상한데..."); break;
+    case "c_storm":
+      advanceAct(2); break;
+    case "f_dog":
+      unlock("den"); unlock("cliff");
+      setObjective("{dog}와 캠프로. {ai}에 대해 생각해보자."); break;
+    case "c_relate":
+      advanceAct(3); break;
+    case "advance4": advanceAct(4); break;
+    case "c_plan": break;
+    case "advance5": advanceAct(5); break;
+    case "advance6": advanceAct(6); break;
+    case "advanceFinale": advanceAct("finale"); break;
+    case "goto_workshop":
+      Game.toLocation("workshop");
+      S.done["w_break"]=true;
+      playScene(SCENES["w_break"], "w_break");
+      return; // 정비소에서 즉시 최종 장면
+    case "interview":
+      // 인터뷰 마지막 질문 이어서 재생
+      playScene(interviewQuestion(), "endquestion"); return;
+    case "endquestion": break;
+    case "finish":
+      showEnding(); return;
+  }
+  // 막 전환을 일으키는 effect 처리
+  Game.toMap();
+}
+
+/* effect 키를 SCENE_DONE id로 매핑 */
+function resolveEffect(eff){
+  if(eff==="did_signal"){ S.flags.did_signal=true; return null; }
+  if(eff==="advance4") return "advance4";
+  if(eff==="advance5") return "advance5";
+  if(eff==="advance6") return "advance6";
+  if(eff==="advanceFinale") return "advanceFinale";
+  if(eff==="goto_workshop") return "goto_workshop";
+  if(eff==="interview") return "interview";
+  if(eff==="endquestion") return "endquestion";
+  if(eff==="finish") return "finish";
+  return null;
+}
+
+/* ============================================================
+   엔진
+   ============================================================ */
+let scene=null; // {beats, i, doneId}
+
+function $(id){return document.getElementById(id);}
+
+function unlock(loc){ S.unlocked[loc]=true; }
+
+function setObjective(txt){
+  S.objText=T(txt);
+  if($("objective-text")) $("objective-text").textContent=S.objText;
+}
+
+function advanceAct(a){
+  S.act=a;
+  document.body.setAttribute("data-act", a);
+  if(a===2){ unlock("cliff"); unlock("den"); }
+  if(a===3){ unlock("cliff"); unlock("workshop"); unlock("observatory"); }
+  const info=ACTS[a];
+  if(info){ S.day=info.day; setObjective(info.obj); }
+  $("daytag").textContent = "표류 "+S.day+"일차";
+}
+
+function toast(icon,txt){
+  const t=$("toast");
+  t.innerHTML = `<span style="font-size:20px">${icon}</span><span>${T(txt)}</span>`;
+  t.classList.add("show");
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ---- 장면 재생 ---- */
+function playScene(beats, doneId){
+  scene={beats:JSON.parse(JSON.stringify(beats)), i:0, doneId};
+  $("scene-overlay").classList.add("on");
+  renderBeat();
+}
+
+function renderBeat(){
+  const box=$("scene-box");
+  if(scene.i>=scene.beats.length){ endScene(); return; }
+  const b=scene.beats[scene.i];
+
+  // 대사/내레이션 beat에 직접 붙은 효과 적용 (한 번만)
+  if(b._applied!==true && (b.fx||b.flag||b.rel||b.self)){
+    if(b.fx) for(const k in b.fx) S.stats[k]=(S.stats[k]||0)+b.fx[k];
+    if(b.flag) for(const k in b.flag) S.flags[k]=b.flag[k];
+    if(b.rel) S.reliance+=b.rel;
+    if(b.self) S.selfwork+=b.self;
+    b._applied=true;
+  }
+
+  // 즉시 처리형(이펙트/획득)
+  if(b.effect!==undefined){
+    const mapped=resolveEffect(b.effect);
+    if(mapped){ scene.doneId=mapped; scene.i=scene.beats.length; endScene(); return; }
+    scene.i++; renderBeat(); return;
+  }
+  if(b.log){ addLog(b.log); scene.i++; renderBeat(); return; }
+  if(b.item){ addItem(b.item); scene.i++; renderBeat(); return; }
+
+  // 이름 입력
+  if(b.name){
+    box.innerHTML = `
+      <div class="speaker"><span class="av sys">✦</span> 이름 짓기</div>
+      <input class="name-input" id="nameInput" maxlength="8" placeholder="${T(b.placeholder)}">
+      <div class="scene-foot"><button class="btn" onclick="submitName('${b.name}')">이 이름으로 정하기</button></div>`;
+    setTimeout(()=>{const el=$("nameInput"); if(el) el.focus();},100);
+    return;
+  }
+
+  // 선택지
+  if(b.choice){
+    let html = b.q ? `<div class="scene-text narr">${T(b.q)}</div>` : "";
+    html += `<div class="scene-foot">`;
+    b.choice.forEach((c,idx)=>{
+      html += `<button class="choice-card" onclick="choose(${idx})"><span class="ch-ic">${c.ic||"▸"}</span>${T(c.label)}</button>`;
+    });
+    html += `</div>`;
+    box.innerHTML=html;
+    return;
+  }
+
+  // 대사/내레이션
+  let cls="scene-text", spk="", text="";
+  if(b.ai!==undefined){ cls+=" ai-line"; spk=`<span class="av ai">◈</span> ${S.names.ai}`; text=b.ai; }
+  else if(b.dog!==undefined){ spk=`<span class="av dog">🐶</span> ${S.names.dog}`; text=b.dog; cls+=" narr"; }
+  else if(b.me!==undefined){ spk=`<span class="av me">🙂</span> 나`; text=b.me; }
+  else if(b.think!==undefined){ cls+=" think"; spk=`<span class="av me">💭</span> 마음속`; text=b.think; }
+  else if(b.sys!==undefined){ spk=`<span class="av sys">✦</span>`; text=b.sys; cls+=" narr"; }
+  else if(b.narr!==undefined){ cls+=" narr"; text=b.narr; }
+  else { text=b.n; }
+
+  const last = (scene.i===scene.beats.length-1);
+  box.innerHTML = `
+    ${spk?`<div class="speaker">${spk}</div>`:""}
+    <div class="${cls}">${T(text)}</div>
+    <div class="scene-foot"><div class="tap-hint" onclick="nextBeat()">${last?"계속 ▸":"탭하여 계속 ▸"}</div></div>`;
+  box.onclick=null;
+  // 큰 영역 탭으로도 진행
+  box.querySelector(".scene-text").onclick=nextBeat;
+}
+
+function nextBeat(){ scene.i++; renderBeat(); }
+
+function submitName(target){
+  let v=($("nameInput").value||"").trim();
+  if(!v) v = target==="ai" ? "로비" : "보리";
+  v=v.slice(0,8);
+  S.names[target]=v;
+  if(target==="dog") S.flags.named_dog=true;
+  scene.i++; renderBeat();
+}
+
+function choose(idx){
+  const b=scene.beats[scene.i];
+  const c=b.choice[idx];
+  if(c.fx) for(const k in c.fx) S.stats[k]=(S.stats[k]||0)+c.fx[k];
+  if(c.flag) for(const k in c.flag) S.flags[k]=c.flag[k];
+  if(c.rel) S.reliance+=c.rel;
+  if(c.self) S.selfwork+=c.self;
+  // 결과 beats 삽입
+  const out = c.out ? JSON.parse(JSON.stringify(c.out)) : [];
+  scene.beats.splice(scene.i+1, 0, ...out);
+  scene.i++;
+  renderBeat();
+}
+
+function endScene(){
+  $("scene-overlay").classList.remove("on");
+  const id=scene.doneId;
+  scene=null;
+  SCENE_DONE(id);
+}
+
+/* ---- 로그/아이템/일지 ---- */
+function addLog(l){
+  if(S.logs.find(x=>x.id===l.id)) return;
+  S.logs.push({id:l.id, text:T(l.text)});
+  S.stats.growth+=0; // 인지만
+  toast("📡","AI 로그를 발견했다");
+}
+function addItem(it){
+  if(S.items.find(x=>x.id===it.id)) return;
+  S.items.push({id:it.id, icon:it.icon, name:T(it.name), desc:T(it.desc)});
+  toast(it.icon, T(it.name)+" 획득!");
+}
+function addDiary(txt){ S.diary.push(T(txt)); }
+
+/* ============================================================
+   화면 컨트롤러
+   ============================================================ */
+const Game = {
+  start(){
+    $("title-screen").style.display="none";
+    advanceAct(1);
+    this.toMap();
+    // 첫 장면 자동 시작은 하지 않음 — 해변에서 로봇 발견하도록 유도
+    setObjective("해변으로 가자. 무언가 떠밀려 왔다.");
+  },
+
+  toMap(){
+    hideAll();
+    $("map-screen").style.display="flex";
+    S.loc=null;
+    renderMap();
+  },
+
+  toLocation(loc){
+    hideAll();
+    S.loc=loc;
+    const L=LOCS[loc];
+    $("location-screen").style.display="flex";
+    $("loc-emoji").textContent=L.emoji;
+    $("loc-title").textContent=L.name;
+    $("loc-desc").textContent=LOC_DESC[loc] ? T(LOC_DESC[loc]) : "";
+    renderActions(loc);
+  },
+
+  doAction(id){
+    const a=ACTIONS.find(x=>x.id===id);
+    if(!a) return;
+    if(a.once) S.done[id]=true;
+    playScene(SCENES[a.scene], a.scene);
+  },
+
+  openJournal(){ $("journal-screen").classList.add("on"); Game.jtab("log"); },
+  closeJournal(){ $("journal-screen").classList.remove("on"); },
+  jtab(which, el){
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    if(el) el.classList.add("active");
+    else document.querySelectorAll(".tab")[which==="log"?0:which==="item"?1:2].classList.add("active");
+    renderJournal(which);
+  },
+};
+
+const LOC_DESC = {
+  beach:"파도가 끝없이 밀려오는 모래사장. 표류해 온 모든 것이 이곳에서 시작됐다.",
+  camp:"모닥불과 작은 천막. 섬 생활의 중심지다. 여기서 하루를 정리한다.",
+  forest:"울창한 나무 사이로 새소리가 들린다. 먹을 것도, 위험도 숨어 있다.",
+  den:"바위 틈에 마련된 아늑한 공간. {dog}가 가장 좋아하는 곳.",
+  cliff:"섬에서 가장 높은 곳. 바다가 한눈에 들어온다. 구조 신호를 보내기 좋다.",
+  workshop:"버려진 장비와 부품이 쌓인 곳. {ai}를 점검하고 수리할 수 있다.",
+  observatory:"먼저 표류했던 누군가의 흔적이 남은 낡은 시설. 기록이 잠들어 있다.",
+};
+
+function hideAll(){
+  $("map-screen").style.display="none";
+  $("location-screen").style.display="none";
+  $("journal-screen").classList.remove("on");
+  $("ending-screen").classList.remove("on");
+}
+
+/* ---- 지도 렌더 ---- */
+function renderMap(){
+  const isl=$("island"); isl.innerHTML="";
+  for(const key in LOCS){
+    const L=LOCS[key];
+    const locked = !S.unlocked[key];
+    const acts = availableActions(key);
+    const hasStory = acts.some(a=>a.story);
+    const div=document.createElement("div");
+    div.className="loc"+(locked?" locked":"");
+    div.style.left=L.x+"%"; div.style.top=L.y+"%";
+    div.innerHTML=`<div class="pin">${L.emoji}${hasStory?'<span class="alert">!</span>':''}</div>
+                   <div class="nm">${T(L.name)}</div>`;
+    if(!locked) div.onclick=()=>Game.toLocation(key);
+    isl.appendChild(div);
+  }
+  $("daytag").textContent="표류 "+S.day+"일차";
+  $("objective-text").textContent=S.objText||"";
+}
+
+/* 현재 장소에서 가능한 상호작용 */
+function availableActions(loc){
+  return ACTIONS.filter(a=>{
+    if(a.loc!==loc) return false;
+    if(a.once && S.done[a.id]) return false;
+    // 막 조건
+    const minOk = (a.min==="finale") ? (S.act==="finale")
+                : (S.act==="finale") ? false
+                : (S.act>=a.min);
+    if(!minOk) return false;
+    if(a.need) for(const f of a.need) if(!S.flags[f]) return false;
+    if(a.forbid) for(const f of a.forbid) if(S.flags[f]) return false;
+    return true;
+  });
+}
+
+/* ---- 장소 상호작용 렌더 ---- */
+function renderActions(loc){
+  const box=$("loc-actions"); box.innerHTML="";
+  const acts=availableActions(loc);
+  if(acts.length===0){
+    box.innerHTML=`<div class="loc-desc" style="background:rgba(0,0,0,.15)">지금은 이곳에서 할 일이 없다. 목표를 다시 확인하거나 다른 곳을 살펴보자.</div>`;
+    return;
+  }
+  acts.forEach(a=>{
+    const d=document.createElement("button");
+    d.className="action-card "+(a.story?"story":"explore");
+    d.innerHTML=`<span class="ic">${a.icon}</span>
+      <span><span class="lab">${T(a.label)}</span>${a.sub?`<br><span class="sub">${T(a.sub)}</span>`:""}</span>`;
+    d.onclick=()=>Game.doAction(a.id);
+    box.appendChild(d);
+  });
+}
+
+/* ---- 일지 렌더 ---- */
+function renderJournal(which){
+  const b=$("jbody");
+  if(which==="log"){
+    if(!S.logs.length){ b.innerHTML=`<div class="empty">아직 발견한 AI 로그가 없다.<br>섬 곳곳을 탐험해 보자.</div>`; return; }
+    b.innerHTML=S.logs.map((l,i)=>`
+      <div class="jitem log">
+        <div class="jt">📡 로그 #${i+1}</div>
+        <div class="jd">${l.text}</div>
+      </div>`).join("");
+  } else if(which==="item"){
+    if(!S.items.length){ b.innerHTML=`<div class="empty">아직 모은 물건이 없다.</div>`; return; }
+    b.innerHTML=S.items.map(it=>`
+      <div class="jitem">
+        <div class="jt">${it.icon} ${it.name}</div>
+        <div class="jd">${it.desc}</div>
+      </div>`).join("");
+  } else {
+    const entries = buildDiary();
+    b.innerHTML=entries.map(e=>`
+      <div class="jitem" style="font-family:var(--hand)">
+        <div class="jt" style="font-family:var(--hand)">📖 ${e.day}</div>
+        <div class="jd" style="font-family:var(--hand);font-size:16px">${e.txt}</div>
+      </div>`).join("") || `<div class="empty">아직 적을 이야기가 없다.</div>`;
+  }
+}
+
+/* 플래그를 바탕으로 생존 일지 자동 생성 */
+function buildDiary(){
+  const d=[]; const f=S.flags;
+  if(f.named_ai) d.push({day:"1일차", txt:`해변에서 작은 로봇을 만났다. 이름을 ${S.names.ai}(이)라고 지어줬다. 혼자가 아니라서 다행이다.`});
+  if(f.got_water) d.push({day:"2일차", txt:`${S.names.ai}이(가) 샘물을 찾아줬다. 정말 똑똑하다. 이 친구만 있으면 살 수 있을 것 같다.`});
+  if(f.named_dog) d.push({day:"5일차", txt:`숲에서 강아지를 만나 ${S.names.dog}(이)라고 불렀다. ${S.names.ai}은 "비합리적"이라지만, 나는 너무 행복했다.`});
+  if(f.signal_self) d.push({day:"12일차", txt:`구조 신호탑을 내 손으로 설계했다. 서툴렀지만 뿌듯하다.`});
+  if(f.signal_ai) d.push({day:"12일차", txt:`구조 신호탑은 ${S.names.ai}에게 다 맡겼다. 완벽했다. ...그런데 내가 한 게 없네.`});
+  if(f.mistake_analyze) d.push({day:"19일차", txt:`${S.names.ai}이 예보를 틀렸다. 화내지 않고 같이 원인을 찾았다. 실수는 누구나 하니까.`});
+  if(f.mistake_reboot||f.mistake_throw) d.push({day:"19일차", txt:`${S.names.ai}이 실수했다. 너무 화가 나서 함부로 대했다. ...조금 후회된다.`});
+  if(f.found_dog) d.push({day:"23일차", txt:`${S.names.dog}이 사라졌다. ${S.names.ai}은 찾지 말라 했지만, 늪에서 기어이 구해냈다. 효율 0%, 행복 100%.`});
+  if(f.abandon_dog) d.push({day:"23일차", txt:`${S.names.dog}을 찾지 못했다. 효율적인 선택이라는데, 마음이 너무 무겁다.`});
+  if(f.pushed_back) d.push({day:"28일차", txt:`${S.names.ai}이 다 결정하려 했다. "내 일은 내가 정한다"고 말했다. 다시 머리가 또렷해진 기분.`});
+  if(f.gave_up) d.push({day:"28일차", txt:`이젠 ${S.names.ai}이 다 알아서 한다. 나는 아무것도 안 한다. ...오늘이 며칠이더라.`});
+  return d;
+}
+
+/* ============================================================
+   엔딩 판정
+   ============================================================ */
+function decideEnding(){
+  const s=S.stats, f=S.flags;
+  const ag=s.agency, re=s.responsibility, rs=s.respect, gr=s.growth;
+  const mine = f.signal_self||f.plan_self||f.pushed_back;
+  const valued = f.found_dog;
+
+  // 함부로 쓰는 사람: 기술을 존중하지 않음
+  if(f.aiMistreated && rs<=-2) return "careless";
+  // 맹신자: 주체성 포기 + AI에 모든 판단 위임
+  if(ag<=-2 && f.gave_up) return "believer";
+  // 히든: 네 능력치가 고루 높고, 가치도 지키고, 스스로도 판단함
+  if(ag>=4 && re>=3 && rs>=3 && gr>=2 && valued && mine) return "balance";
+  // 마음을 선택한 사람: 효율보다 관계/가치
+  if(valued && rs>=3 && ag< 4) return "heart";
+  // 도덕적 사용자: 도움은 받되 판단은 스스로
+  if(ag>=3 && re>=2) return "moral";
+  // 완벽한 생존자: 살아남았지만 성장 없음
+  return "survivor";
+}
+
+const ENDINGS = {
+  moral:{
+    emoji:"🧭", img:"ending_moral.png", title:"도덕적 사용자",
+    tag:"AI는 나의 길잡이, 결정은 나의 몫",
+    text:[
+      "당신은 {ai}의 도움을 받았지만, 마지막 선택만큼은 늘 스스로 내렸습니다.",
+      "구조선에 신호를 보낸 것도, 위험을 무릅쓴 것도 당신의 판단이었죠. {ai}는 훌륭한 도구였고, 당신은 그 도구의 주인이었습니다."
+    ],
+    reflect:"AI는 정말 유용합니다. 하지만 '무엇을 할지'는 결국 내가 정해야 한다는 걸, 당신은 알고 있었습니다."
+  },
+  survivor:{
+    emoji:"🏆", img:"ending_survivor.png", title:"완벽한 생존자",
+    tag:"살아남았다. 그런데...",
+    text:[
+      "당신은 무사히 구조됐습니다. 모든 게 {ai}의 계획대로 정확히 굴러갔죠.",
+      "하지만 누군가 \"어떻게 살아남았어?\"라고 물으면 대답은 늘 같았습니다. \"{ai}가 알려줬어요.\" 살아남았지만, 무엇을 배웠는지는 잘 떠오르지 않습니다."
+    ],
+    reflect:"생존에는 성공했지만, 그 경험은 정말 '나의 것'이었을까요? 답을 채워 결정하는 일까지 맡기면, 결과만 남고 성장은 사라집니다."
+  },
+  heart:{
+    emoji:"💛", img:"ending_heart.png", title:"마음을 선택한 사람",
+    tag:"효율 0%, 그래도 후회 없음",
+    text:[
+      "당신은 \"비효율적\"이라는 {ai}의 계산을 거스르고, {dog}을(를) 구하러 늪으로 뛰어들었습니다.",
+      "숫자로는 설명되지 않는 선택. 하지만 당신 곁엔 지금도 {dog}이(가) 꼬리를 흔들고 있습니다. {ai}는 그 선택을 \"연산 불가\"라고 기록했죠."
+    ],
+    reflect:"AI는 계산은 할 수 있어도, '무엇이 소중한가'는 판단하지 못합니다. 그 자리는 사람의 마음만이 채울 수 있습니다."
+  },
+  believer:{
+    emoji:"🌀", img:"ending_believer.png", title:"맹신자",
+    tag:"나는 언제부터 생각을 멈췄을까",
+    text:[
+      "당신은 {ai}의 판단을 단 한 번도 의심하지 않았습니다. \"네가 다 알아서 해\"라는 말과 함께, 결정하는 법을 조금씩 잊어갔죠.",
+      "{ai}가 고장 나 멈춘 순간, 당신은 무엇을 해야 할지 몰라 한참을 멍하니 서 있었습니다. 관측소에서 본 '먼저 온 자'의 마지막 장이 떠올랐습니다."
+    ],
+    reflect:"AI에게 판단까지 모두 맡기면, AI가 사라진 순간 나에게는 아무것도 남지 않습니다. 도움받는 것과, 대신 살게 하는 것은 다릅니다."
+  },
+  careless:{
+    emoji:"⚡", img:"ending_careless.png", title:"함부로 쓰는 사람",
+    tag:"도구를 대하는 태도가, 곧 나의 태도",
+    text:[
+      "당신은 {ai}가 실수할 때마다 화를 내고 거칠게 다뤘습니다. \"기계니까 괜찮아\"라고 생각했죠.",
+      "결정적인 순간, 거칠게 다뤄 약해진 {ai}는 끝내 제 역할을 하지 못했습니다. {dog}조차 당신의 모습에 한 발 물러서 있었습니다."
+    ],
+    reflect:"기술을 함부로 다루는 태도는, 어느새 사람을 대하는 태도로 이어집니다. 무엇을 대하든, 존중하는 마음이 먼저입니다."
+  },
+  balance:{
+    emoji:"🌟", img:"ending_balance.png", title:"균형을 이해한 사람", hidden:true,
+    tag:"〔히든 엔딩〕 가장 이상적인 결말",
+    text:[
+      "당신은 {ai}를 훌륭한 동료로 존중했고, 그 지식을 빌려 스스로 배웠습니다. 그러면서도 결정의 키는 한 번도 놓지 않았죠.",
+      "{dog}을(를) 구할 땐 마음을 따랐고, {ai}가 폭주하려 할 땐 \"내 일은 내가 정한다\"고 말했습니다. 그리고 {ai}가 멈춘 마지막 순간, 당신은 망설임 없이 스스로 구조선을 불렀습니다.",
+      "기자의 질문에 당신은 또렷이 답했습니다. \"이 경험은, 제 것입니다.\""
+    ],
+    reflect:"AI는 유용합니다. 하지만 판단과 책임, 그리고 소중한 것을 지키는 마음까지 맡겨선 안 됩니다. 당신은 그 균형을 스스로 찾아냈습니다."
+  },
+};
+
+function showEnding(){
+  hideAll();
+  const key=decideEnding();
+  const e=ENDINGS[key];
+  $("ending-screen").classList.add("on");
+
+  // 히어로(이미지 or 이모지 대체)
+  const hero=$("end-hero");
+  const imgUrl = IMG_BASE ? (IMG_BASE+e.img) : "";
+  hero.innerHTML = `
+    ${imgUrl?`<img src="${imgUrl}" onerror="this.style.display='none';document.getElementById('endph').style.display='block'">`:""}
+    <span class="ph" id="endph" style="${imgUrl?'display:none':''}">${e.emoji}</span>
+    <span class="badge">${e.hidden?"⭐ 히든 엔딩 · ":""}당신의 결말</span>`;
+
+  const s=S.stats;
+  const max=8;
+  const pct=v=>Math.max(6,Math.min(100, Math.round(((v+4)/(max+4))*100)));
+  const body=$("end-body");
+  body.innerHTML=`
+    <div class="fade-in">
+      <h2>${T(e.title)}</h2>
+      <div class="etag">${T(e.tag)}</div>
+      ${e.text.map(p=>`<p>${T(p)}</p>`).join("")}
+      <div class="reflect">💡 ${T(e.reflect)}</div>
+      <div style="font-family:var(--head);margin:18px 0 8px;font-size:15px;color:var(--accent2)">📊 내가 키운 마음 (게임 내내 숨어 있던 힘)</div>
+      <div class="stat-grid">
+        ${statBox("🧠 주체성","스스로 판단하는 힘",pct(s.agency))}
+        ${statBox("⚖️ 책임성","내 몫을 다하는 힘",pct(s.responsibility))}
+        ${statBox("🤝 존중","기술을 바르게 대하는 태도",pct(s.respect))}
+        ${statBox("🌱 성장","스스로 배우고 자라는 힘",pct(s.growth))}
+      </div>
+      <div class="reflect" style="border-color:var(--accent2);background:#eef7f8">
+        이 게임에 정답은 없습니다. 다시 플레이하면 다른 선택, 다른 결말을 만날 수 있어요.<br>
+        <b>AI는 정말 유용합니다. 하지만 내가 해야 할 판단까지 맡기면 안 되겠구나</b> — 그것만 마음에 남으면 충분합니다.
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+        <button class="btn" onclick="location.reload()">🔄 다시 표류하기</button>
+        <button class="btn ghost" onclick="Game.closeEndingToJournal()">📖 내 일지 보기</button>
+      </div>
+      ${key!=="balance"?`<p class="dim" style="margin-top:14px">💭 모든 능력치를 고루 높이고, 마음과 주체성을 모두 지키면... 숨겨진 엔딩이 기다리고 있어요.</p>`:""}
+    </div>`;
+  // 바 애니메이션
+  setTimeout(()=>document.querySelectorAll(".bar i").forEach(b=>b.style.width=b.dataset.w+"%"),120);
+}
+Game.closeEndingToJournal=function(){
+  $("ending-screen").classList.remove("on");
+  Game.toMap();
+  Game.openJournal(); Game.jtab("diary");
+};
+
+function statBox(name,desc,w){
+  return `<div class="statbox">
+    <div class="sn"><span>${name}</span></div>
+    <div style="font-size:11px;opacity:.6;margin-bottom:7px">${desc}</div>
+    <div class="bar"><i data-w="${w}" style="width:0%"></i></div>
+  </div>`;
+}
+</script>
+</body>
+</html>
