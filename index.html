@@ -6,7 +6,7 @@
 <title>무인도에서 살아남기: AI 로봇과 함께라면?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Dodum&family=Gaegu:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Gaegu:wght@400;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    무인도에서 살아남기: AI 로봇과 함께라면?
@@ -84,24 +84,45 @@ button{font-family:var(--body); cursor:pointer; border:none; background:none; co
 .btn.small{font-size:14px;padding:9px 16px;border-radius:12px;}
 
 /* ============ 타이틀 화면 ============ */
-#title-screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}
-.title-art{
-  width:170px;height:170px;border-radius:50%;margin-bottom:8px;
-  background:
-    radial-gradient(circle at 38% 34%, #fff7e0, #ffd89b 40%, #e98a3c 72%, #b85a1e 100%);
-  box-shadow:0 16px 40px rgba(0,0,0,.3), inset -18px -22px 40px rgba(120,40,0,.35);
-  position:relative; display:flex;align-items:center;justify-content:center;font-size:74px;
-  animation:bob 4s ease-in-out infinite;
+#title-screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;text-align:center;
+  padding:0 28px 54px;overflow:hidden;
+  background-position:center;background-size:cover;background-repeat:no-repeat;
 }
-@keyframes bob{50%{transform:translateY(-10px);}}
+/* 배경 사진 위 가독성용 스크림(위 투명 → 아래 짙게) */
+#title-screen::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg, rgba(10,20,28,.18) 0%, rgba(10,20,28,.05) 38%, rgba(8,16,24,.62) 78%, rgba(6,12,20,.85) 100%);
+}
+.title-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;animation:fade .9s ease;}
+.title-kicker{
+  font-family:var(--head);color:rgba(255,255,255,.92);font-size:clamp(11px,2.6vw,14px);
+  letter-spacing:.42em;text-transform:uppercase;margin-bottom:16px;padding-left:.42em;
+  text-shadow:0 2px 10px rgba(0,0,0,.6);
+}
 #title-screen h1{
-  font-family:var(--display); color:#fff; line-height:1.1; margin-top:10px;
-  font-size:clamp(30px,7vw,52px); text-shadow:0 4px 0 #b85a1e, 0 10px 24px rgba(0,0,0,.35);
+  font-family:'Gowun Batang', serif; font-weight:700; color:#fff;
+  line-height:1.28; letter-spacing:.04em;
+  font-size:clamp(33px,8.4vw,58px);
+  text-shadow:0 2px 22px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.6);
 }
-#title-screen .sub{font-family:var(--head);color:#fff;font-size:clamp(16px,3.4vw,22px);
-  background:rgba(0,0,0,.18);padding:4px 16px;border-radius:30px;margin:14px 0 26px;}
-.float-cloud{position:absolute;color:rgba(255,255,255,.55);font-size:60px;animation:drift 26s linear infinite;}
-@keyframes drift{from{transform:translateX(-140px);}to{transform:translateX(110vw);}}
+.title-rule{width:54px;height:2px;background:rgba(255,255,255,.7);margin:20px 0;
+  box-shadow:0 1px 6px rgba(0,0,0,.5);}
+#title-screen .sub{
+  font-family:'Gowun Batang', serif; color:#fff; font-weight:400;
+  font-size:clamp(16px,3.8vw,21px); letter-spacing:.06em; margin-bottom:30px;
+  text-shadow:0 2px 12px rgba(0,0,0,.6);
+}
+#title-screen .start-btn{
+  font-family:var(--head);font-size:17px;letter-spacing:.12em;color:#2a2320;
+  background:rgba(255,255,255,.95);padding:14px 34px;border-radius:40px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);transition:transform .08s,box-shadow .12s;
+  backdrop-filter:blur(2px);
+}
+#title-screen .start-btn:active{transform:translateY(3px);box-shadow:0 4px 14px rgba(0,0,0,.4);}
+#title-screen .caption{color:rgba(255,255,255,.82);margin-top:20px;font-size:12px;letter-spacing:.06em;
+  text-shadow:0 1px 6px rgba(0,0,0,.6);}
 
 /* ============ 일반 패널 / 내레이션 ============ */
 .panel{
@@ -137,11 +158,13 @@ button{font-family:var(--body); cursor:pointer; border:none; background:none; co
 .journal-btn{background:rgba(255,255,255,.92);border-radius:14px;padding:8px 12px;font-family:var(--head);
   font-size:14px;box-shadow:0 4px 12px var(--shadow);}
 
-.island{flex:1;position:relative;}
+.island{flex:1;position:relative;background-position:center;background-size:cover;background-repeat:no-repeat;}
+.island::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg, rgba(8,16,24,.10), rgba(8,16,24,.04) 40%, rgba(8,16,24,.22));}
 .island-bg{position:absolute;inset:0;}
 .loc{
   position:absolute;transform:translate(-50%,-50%);text-align:center;cursor:pointer;
-  transition:transform .12s;
+  transition:transform .12s;z-index:2;
 }
 .loc:active{transform:translate(-50%,-50%) scale(.92);}
 .loc .pin{
@@ -276,13 +299,14 @@ body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
 
     <!-- 타이틀 -->
     <div id="title-screen">
-      <div class="float-cloud" style="top:14%;animation-delay:-4s;">☁</div>
-      <div class="float-cloud" style="top:26%;font-size:42px;animation-delay:-14s;">☁</div>
-      <div class="title-art">🏝️</div>
-      <h1>무인도에서 살아남기</h1>
-      <div class="sub">AI 로봇과 함께라면?</div>
-      <button class="btn" onclick="Game.start()">모험 시작하기 ▸</button>
-      <p style="color:#fff;margin-top:18px;font-size:13px;opacity:.85;">초등 6학년 · 약 20분 · 탐험형 스토리</p>
+      <div class="title-inner">
+        <div class="title-kicker">AI Survival Story</div>
+        <h1>무인도에서 살아남기</h1>
+        <div class="title-rule"></div>
+        <div class="sub">AI 로봇과 함께라면?</div>
+        <button class="start-btn" onclick="Game.start()">모험 시작하기 ▸</button>
+        <p class="caption">초등 6학년 · 약 20분 · 탐험형 스토리</p>
+      </div>
     </div>
 
     <!-- 지도 -->
@@ -354,8 +378,16 @@ body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
      ending_believer.png  (맹신자)
      ending_careless.png  (함부로 쓰는 사람)
      ending_balance.png   (히든: 균형을 이해한 사람)
+
+   화면 배경 이미지 파일명:
+     title_bg.jpg   (첫 화면 배경 — 세로형 권장)
+     map_bg.jpg     (홈/지도 화면 배경 — 무인도 지도/그림)
+   ※ index.html 과 같은 폴더에 두면 IMG_BASE 가 비어 있어도 바로 적용됩니다.
+     없으면 기존 그라데이션 배경으로 자동 대체됩니다.
    ============================================================ */
-const IMG_BASE = "https://raw.githubusercontent.com/So0yeon/desert-island/main/img/"; // 예: "https://raw.githubusercontent.com/yourname/island-game/main/img/"
+const IMG_BASE = ""; // 예: "https://raw.githubusercontent.com/yourname/island-game/main/img/"
+const TITLE_BG = "title_bg.jpg"; // 첫 화면 배경
+const MAP_BG   = "map_bg.jpg";   // 홈(지도) 화면 배경
 
 /* ============================================================
    상태
@@ -1236,6 +1268,22 @@ function statBox(name,desc,w){
     <div class="bar"><i data-w="${w}" style="width:0%"></i></div>
   </div>`;
 }
+
+/* ---- 첫 화면 / 지도 배경 이미지 적용 (파일 없으면 기본 그라데이션 유지) ---- */
+(function applyArt(){
+  function setBg(elId, file){
+    var el=document.getElementById(elId); if(!el) return;
+    var url=IMG_BASE+file;
+    if(typeof Image==="undefined"){ el.style.backgroundImage="url('"+url+"')"; return; }
+    var probe=new Image();
+    probe.onload=function(){ el.style.backgroundImage="url('"+url+"')"; };
+    probe.onerror=function(){ /* 이미지가 없으면 그대로 그라데이션 배경 사용 */ };
+    probe.src=url;
+  }
+  setBg("title-screen", TITLE_BG);
+  setBg("island", MAP_BG);
+})();
+
 </script>
 </body>
 </html>
