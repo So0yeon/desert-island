@@ -15,7 +15,7 @@
 
 :root{
   --sky-top:#ffd89b; --sky-bot:#86c7d6; --sea:#3fa9bd;
-  --sand:#f3e0b5; --ink:#2a2320; --paper:#fbf3df;
+  --sand:#f3e0b5; --ink:#2a2320; --paper:#fbf3df; --ink-on-light:#2a2320;
   --accent:#e98a3c; --accent2:#1fb6c9;
   --ai:#19d3e6; --ai-deep:#0a7d8c;
   --warm:#e98a3c; --danger:#e0584b;
@@ -116,7 +116,7 @@ button{font-family:var(--body); cursor:pointer; border:none; background:none; co
 /* 이름 입력 */
 .name-input{
   font-family:var(--head);font-size:22px;text-align:center;width:100%;
-  padding:14px;border:3px dashed var(--accent);border-radius:14px;background:#fff;color:var(--ink);
+  padding:14px;border:3px dashed var(--accent);border-radius:14px;background:#fff;color:var(--ink-on-light);
   margin:14px 0;outline:none;
 }
 
@@ -199,9 +199,15 @@ button{font-family:var(--body); cursor:pointer; border:none; background:none; co
 .scene-text.ai-line{font-family:var(--mono);color:var(--ai-deep);letter-spacing:.01em;}
 .scene-text.narr{color:#5a4d3c;font-style:italic;}
 .scene-text.think{color:#6a5a8a;}
+/* 최종장: 대화 상자가 어두운 색이므로 글씨를 밝게 */
+body[data-act="finale"] .scene-text{color:var(--ink);}
+body[data-act="finale"] .scene-text.narr{color:#cbbf9f;}
+body[data-act="finale"] .scene-text.think{color:#c3b3df;}
+body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
 .scene-foot{margin-top:18px;display:flex;flex-direction:column;gap:10px;}
 .choice-card{
   background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;
+  color:var(--ink-on-light);
   font-size:16px;line-height:1.5;transition:transform .08s,border-color .12s,background .12s;cursor:pointer;
 }
 .choice-card:hover{border-color:var(--accent);background:#fff7e8;}
@@ -250,11 +256,11 @@ button{font-family:var(--body); cursor:pointer; border:none; background:none; co
 .end-body .etag{font-family:var(--head);color:var(--accent2);margin-bottom:14px;}
 .end-body p{font-size:16px;line-height:1.8;margin-bottom:12px;}
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
-.statbox{background:#fff;border:2px solid var(--line);border-radius:14px;padding:11px 13px;}
+.statbox{background:#fff;border:2px solid var(--line);border-radius:14px;padding:11px 13px;color:var(--ink-on-light);}
 .statbox .sn{font-family:var(--head);font-size:14px;display:flex;justify-content:space-between;margin-bottom:6px;}
 .bar{height:9px;background:#e7dcc2;border-radius:6px;overflow:hidden;}
 .bar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1.1s ease;}
-.reflect{background:#fff4e0;border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:14px 16px;margin:14px 0;font-size:15px;line-height:1.8;}
+.reflect{background:#fff4e0;border-left:5px solid var(--accent);border-radius:0 14px 14px 0;padding:14px 16px;margin:14px 0;font-size:15px;line-height:1.8;color:var(--ink-on-light);}
 
 .center{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;height:100%;gap:18px;}
 .fade-in{animation:fade .6s ease;}
