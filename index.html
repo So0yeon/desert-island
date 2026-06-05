@@ -181,7 +181,7 @@ button{font-family:var(--body); cursor:pointer; border:none; background:none; co
   box-shadow:0 0 0 4px rgba(224,88,75,.3);animation:ping 1.3s infinite;}
 
 /* ============ 장소 화면 ============ */
-#location-screen{position:absolute;inset:0;display:flex;flex-direction:column;}
+#location-screen{position:absolute;inset:0;display:flex;flex-direction:column;background-position:center;background-size:cover;background-repeat:no-repeat;}
 .loc-header{padding:14px 16px;display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,rgba(0,0,0,.2),transparent);}
 .loc-header .big{font-size:34px;}
 .loc-header .t{font-family:var(--display);color:#fff;font-size:24px;text-shadow:0 3px 8px rgba(0,0,0,.45);}
@@ -305,7 +305,7 @@ body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
         <div class="title-rule"></div>
         <div class="sub">AI 로봇과 함께라면?</div>
         <button class="start-btn" onclick="Game.start()">모험 시작하기 ▸</button>
-        <p class="caption">인공지능 로봇을 어떻게 사용해야 할까?</p>
+        <p class="caption">초등 6학년 · 약 20분 · 탐험형 스토리</p>
       </div>
     </div>
 
@@ -380,8 +380,17 @@ body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
      ending_balance.png   (히든: 균형을 이해한 사람)
 
    화면 배경 이미지 파일명:
-     title_bg.png   (첫 화면 배경 — 세로형 권장)
-     map_bg.png     (홈/지도 화면 배경 — 무인도 지도/그림)
+     title_bg.png   (첫 화면 배경 — 세로형 9:16)
+     map_bg.png     (홈/지도 화면 배경 — 무인도 지도/그림, 가로형)
+
+   장소 배경 이미지 파일명(가로형 권장):
+     loc_beach.png        (해변)
+     loc_camp.png         (캠프)
+     loc_forest.png       (숲)
+     loc_den.png          (강아지 은신처)
+     loc_cliff.png        (절벽)
+     loc_workshop.png     (AI 정비소)
+     loc_observatory.png  (버려진 관측소)
    ※ index.html 과 같은 폴더에 두면 IMG_BASE 가 비어 있어도 바로 적용됩니다.
      없으면 기존 그라데이션 배경으로 자동 대체됩니다.
    ============================================================ */
@@ -995,6 +1004,7 @@ const Game = {
     $("loc-emoji").textContent=L.emoji;
     $("loc-title").textContent=L.name;
     $("loc-desc").textContent=LOC_DESC[loc] ? T(LOC_DESC[loc]) : "";
+    setLocBg(loc);
     renderActions(loc);
   },
 
@@ -1024,6 +1034,31 @@ const LOC_DESC = {
   workshop:"버려진 장비와 부품이 쌓인 곳. {ai}를 점검하고 수리할 수 있다.",
   observatory:"먼저 표류했던 누군가의 흔적이 남은 낡은 시설. 기록이 잠들어 있다.",
 };
+
+/* 장소별 배경 이미지 파일명 */
+const LOC_BG = {
+  beach:"loc_beach.png",
+  camp:"loc_camp.png",
+  forest:"loc_forest.png",
+  den:"loc_den.png",
+  cliff:"loc_cliff.png",
+  workshop:"loc_workshop.png",
+  observatory:"loc_observatory.png",
+};
+
+/* 장소 배경 적용 — 파일이 없으면 기본 그라데이션 배경 유지 */
+function setLocBg(loc){
+  const ls=$("location-screen");
+  ls.style.backgroundImage=""; // 초기화(없으면 기본 배경)
+  const file=LOC_BG[loc]; if(!file) return;
+  const url=IMG_BASE+file;
+  const scrim="linear-gradient(180deg,rgba(8,16,24,.30),rgba(8,16,24,.12) 35%,rgba(8,16,24,.55))";
+  if(typeof Image==="undefined"){ ls.style.backgroundImage=scrim+",url('"+url+"')"; return; }
+  const probe=new Image();
+  probe.onload=function(){ if(S.loc===loc) ls.style.backgroundImage=scrim+",url('"+url+"')"; };
+  probe.onerror=function(){};
+  probe.src=url;
+}
 
 function hideAll(){
   $("map-screen").style.display="none";
@@ -1219,7 +1254,7 @@ function showEnding(){
 
   // 히어로(이미지 or 이모지 대체)
   const hero=$("end-hero");
-  const imgUrl = IMG_BASE ? (IMG_BASE+e.img) : "";
+  const imgUrl = IMG_BASE ? (IMG_BASE+e.img) : "https://raw.githubusercontent.com/So0yeon/desert-island/main/img/";
   hero.innerHTML = `
     ${imgUrl?`<img src="${imgUrl}" onerror="this.style.display='none';document.getElementById('endph').style.display='block'">`:""}
     <span class="ph" id="endph" style="${imgUrl?'display:none':''}">${e.emoji}</span>
