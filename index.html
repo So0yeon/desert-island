@@ -1588,7 +1588,7 @@ function saveEndingCard(){
       const im=new Image(); im.crossOrigin='anonymous';
       im.onload=()=>download(buildEndingCard(im));
       im.onerror=()=>download(buildEndingCard(null));
-      im.src=IMG_BASE+e.img;
+      im.src=(IMG_BASE ? IMG_BASE : "") + e.img;
     } else {
       download(buildEndingCard(null));
     }
