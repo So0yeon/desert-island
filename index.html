@@ -395,7 +395,7 @@ body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
    ※ index.html 과 같은 폴더에 두면 IMG_BASE 가 비어 있어도 바로 적용됩니다.
      없으면 기존 그라데이션 배경으로 자동 대체됩니다.
    ============================================================ */
-const IMG_BASE = ""; // 예: "https://raw.githubusercontent.com/yourname/island-game/main/img/"
+const IMG_BASE = "https://raw.githubusercontent.com/So0yeon/desert-island/main/img/";
 const TITLE_BG = "title_bg.png"; // 첫 화면 배경
 const MAP_BG   = "map_bg.png";   // 홈(지도) 화면 배경
 
@@ -1585,14 +1585,10 @@ function saveEndingCard(){
     document.body.appendChild(a); a.click(); a.remove();
   };
   const go=()=>{
-    if(IMG_BASE){
-      const im=new Image(); im.crossOrigin='anonymous';
-      im.onload=()=>download(buildEndingCard(im));
-      im.onerror=()=>download(buildEndingCard(null));
-      im.src=(IMG_BASE ? IMG_BASE : "") + e.img;
-    } else {
-      download(buildEndingCard(null));
-    }
+    const im=new Image(); im.crossOrigin='anonymous';
+    im.onload=()=>download(buildEndingCard(im));
+    im.onerror=()=>download(buildEndingCard(null));
+    im.src=(IMG_BASE ? IMG_BASE : "") + e.img;
   };
   // 웹폰트가 준비되면 더 예쁘게 렌더
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(go).catch(go);
