@@ -394,7 +394,7 @@ body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
    ※ index.html 과 같은 폴더에 두면 IMG_BASE 가 비어 있어도 바로 적용됩니다.
      없으면 기존 그라데이션 배경으로 자동 대체됩니다.
    ============================================================ */
-const IMG_BASE = ""; // 예: "https://raw.githubusercontent.com/yourname/island-game/main/img/"
+const IMG_BASE = "https://raw.githubusercontent.com/So0yeon/island-game/main/img/";
 const TITLE_BG = "title_bg.jpg"; // 첫 화면 배경
 const MAP_BG   = "map_bg.jpg";   // 홈(지도) 화면 배경
 
@@ -972,6 +972,7 @@ function resolveEffect(eff){
    엔진
    ============================================================ */
 let scene=null; // {beats, i, doneId}
+let lastEnding=null; // {key, e, stats} — 결과 카드 저장용
 
 function $(id){return document.getElementById(id);}
 
@@ -1409,6 +1410,7 @@ function showEnding(){
   hideAll();
   const key=decideEnding();
   const e=ENDINGS[key];
+  lastEnding={key, e, stats:JSON.parse(JSON.stringify(S.stats))};
   $("ending-screen").classList.add("on");
 
   // 히어로(이미지 or 이모지 대체)
@@ -1441,7 +1443,8 @@ function showEnding(){
         <b>AI는 정말 유용합니다. 하지만 내가 해야 할 판단까지 맡기면 안 되겠구나</b> — 그것만 마음에 남으면 충분합니다.
       </div>
       <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
-        <button class="btn" onclick="location.reload()">🔄 다시 표류하기</button>
+        <button class="btn" onclick="saveEndingCard()">📸 결과 이미지로 저장</button>
+        <button class="btn ghost" onclick="location.reload()">🔄 다시 표류하기</button>
         <button class="btn ghost" onclick="Game.closeEndingToJournal()">📖 내 일지 보기</button>
       </div>
       ${key!=="balance"?`<p class="dim" style="margin-top:14px">💭 모든 능력치를 고루 높이고, 마음과 주체성을 모두 지키면... 숨겨진 엔딩이 기다리고 있어요.</p>`:""}
@@ -1462,6 +1465,139 @@ function statBox(name,desc,w){
     <div class="bar"><i data-w="${w}" style="width:0%"></i></div>
   </div>`;
 }
+
+/* ============================================================
+   엔딩 결과 카드 저장 (PNG 다운로드)
+   ============================================================ */
+function rrect(g,x,y,w,h,r){ g.beginPath();
+  g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function wrapLines(g,text,maxW){
+  const words=String(text).split(''); // 한글: 글자 단위 줄바꿈
+  const lines=[]; let line='';
+  for(const ch of words){
+    if(ch==='\n'){ lines.push(line); line=''; continue; }
+    const t=line+ch;
+    if(g.measureText(t).width>maxW && line){ lines.push(line); line=ch; }
+    else line=t;
+  }
+  if(line) lines.push(line);
+  return lines;
+}
+
+function buildEndingCard(heroImg){
+  const e=lastEnding.e, s=lastEnding.stats;
+  const W=1080, pad=80, heroH=600;
+  // 측정용 컨텍스트로 본문 높이 계산
+  const m=document.createElement('canvas').getContext('2d');
+  m.font='34px "Gowun Dodum", sans-serif';
+  const reflectLines=wrapLines(m, "💡 "+T(e.reflect), W-pad*2-48);
+  const reflectBoxH = reflectLines.length*48 + 56;
+  const bodyTop=heroH+70;
+  const barsH=4*88;
+  const H = bodyTop + 80 /*title*/ + 56 /*tag*/ + 40 + 54 /*stat 제목*/ + barsH + 30 + reflectBoxH + 90 /*footer*/;
+
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  cv.__hadImg=!!heroImg;
+  const g=cv.getContext('2d');
+
+  // 배경
+  const bg=g.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#1c2832'); bg.addColorStop(1,'#0e1820');
+  g.fillStyle=bg; g.fillRect(0,0,W,H);
+
+  // 히어로(이미지 cover 또는 이모지)
+  if(heroImg){
+    const ir=heroImg.width/heroImg.height, tr=W/heroH;
+    let sw,sh,sx,sy;
+    if(ir>tr){ sh=heroImg.height; sw=sh*tr; sx=(heroImg.width-sw)/2; sy=0; }
+    else { sw=heroImg.width; sh=sw/tr; sx=0; sy=(heroImg.height-sh)/2; }
+    g.drawImage(heroImg,sx,sy,sw,sh,0,0,W,heroH);
+  } else {
+    g.fillStyle='#13202a'; g.fillRect(0,0,W,heroH);
+    g.font='220px serif'; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText(e.emoji, W/2, heroH/2-20);
+  }
+  // 히어로 하단 스크림
+  const sc=g.createLinearGradient(0,heroH-220,0,heroH);
+  sc.addColorStop(0,'rgba(14,24,32,0)'); sc.addColorStop(1,'#0e1820');
+  g.fillStyle=sc; g.fillRect(0,heroH-220,W,220);
+  // 배지
+  g.textAlign='left'; g.textBaseline='alphabetic';
+  g.font='28px "Do Hyeon", sans-serif'; g.fillStyle='#cfe9ee';
+  g.fillText((e.hidden?"⭐ 히든 엔딩 · ":"")+"당신의 결말", pad, heroH-40);
+
+  // 제목
+  let y=bodyTop+20;
+  g.fillStyle='#19d3e6'; g.font='700 62px "Gowun Batang", serif';
+  g.fillText(T(e.title), pad, y);
+  // 태그
+  y+=52; g.fillStyle='#aebcc4'; g.font='34px "Gowun Batang", serif';
+  g.fillText(T(e.tag), pad, y);
+
+  // 스탯 제목
+  y+=66; g.fillStyle='#5fd6e6'; g.font='28px "Do Hyeon", sans-serif';
+  g.fillText("📊 내가 키운 마음", pad, y);
+  // 스탯 바
+  y+=24;
+  const stats=[['🧠 주체성',s.agency],['⚖️ 책임성',s.responsibility],['🤝 존중',s.respect],['🌱 성장',s.growth]];
+  stats.forEach(([nm,val])=>{
+    y+=44;
+    g.fillStyle='#e7eef2'; g.font='30px "Gowun Dodum", sans-serif'; g.textAlign='left';
+    g.fillText(nm, pad, y);
+    const pct=Math.max(.06, Math.min(1,(val+4)/12));
+    const bx=pad, by=y+16, bw=W-pad*2, bh=22;
+    g.fillStyle='#26343d'; rrect(g,bx,by,bw,bh,11); g.fill();
+    const gr=g.createLinearGradient(bx,0,bx+bw,0); gr.addColorStop(0,'#e98a3c'); gr.addColorStop(1,'#1fb6c9');
+    g.fillStyle=gr; rrect(g,bx,by,Math.max(bh,bw*pct),bh,11); g.fill();
+    y+=44;
+  });
+
+  // 성찰 박스
+  y+=34;
+  const boxX=pad, boxW=W-pad*2;
+  g.fillStyle='rgba(255,255,255,0.06)'; rrect(g,boxX,y,boxW,reflectBoxH,18); g.fill();
+  g.fillStyle='#e98a3c'; g.fillRect(boxX,y,6,reflectBoxH);
+  g.fillStyle='#eef3f6'; g.font='34px "Gowun Dodum", sans-serif'; g.textBaseline='alphabetic';
+  let ty=y+52;
+  reflectLines.forEach(ln=>{ g.fillText(ln, boxX+30, ty); ty+=48; });
+
+  // 푸터
+  g.textAlign='center'; g.fillStyle='#7d97a3'; g.font='27px "Gowun Batang", serif';
+  g.fillText('무인도에서 살아남기: AI 로봇과 함께라면?', W/2, H-44);
+
+  return cv;
+}
+
+function saveEndingCard(){
+  if(!lastEnding) return;
+  const e=lastEnding.e;
+  const fname='무인도_엔딩_'+T(e.title).replace(/[^\wㄱ-ㅎㅏ-ㅣ가-힣]/g,'')+'.png';
+  const download=(canvas)=>{
+    let url;
+    try{ url=canvas.toDataURL('image/png'); }
+    catch(err){
+      if(canvas.__hadImg){ download(buildEndingCard(null)); return; } // 이미지 CORS 실패 → 이모지본
+      alert('이미지 저장에 실패했어요. 브라우저를 바꿔 다시 시도해 주세요.'); return;
+    }
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  const go=()=>{
+    if(IMG_BASE){
+      const im=new Image(); im.crossOrigin='anonymous';
+      im.onload=()=>download(buildEndingCard(im));
+      im.onerror=()=>download(buildEndingCard(null));
+      im.src=IMG_BASE+e.img;
+    } else {
+      download(buildEndingCard(null));
+    }
+  };
+  // 웹폰트가 준비되면 더 예쁘게 렌더
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(go).catch(go);
+  else go();
+}
+
 
 /* ---- 첫 화면 / 지도 배경 이미지 적용 (파일 없으면 기본 그라데이션 유지) ---- */
 (function applyArt(){
