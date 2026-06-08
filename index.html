@@ -1415,7 +1415,7 @@ function showEnding(){
 
   // 히어로(이미지 or 이모지 대체)
   const hero=$("end-hero");
-  const imgUrl = IMG_BASE ? (IMG_BASE+e.img) : "";
+  const imgUrl = (IMG_BASE ? IMG_BASE : "") + e.img;
   hero.innerHTML = `
     ${imgUrl?`<img src="${imgUrl}" onerror="this.style.display='none';document.getElementById('endph').style.display='block'">`:""}
     <span class="ph" id="endph" style="${imgUrl?'display:none':''}">${e.emoji}</span>
