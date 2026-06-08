@@ -380,23 +380,23 @@ body[data-act="finale"] .scene-text.ai-line{color:var(--ai);}
      ending_balance.png   (히든: 균형을 이해한 사람)
 
    화면 배경 이미지 파일명:
-     title_bg.jpg   (첫 화면 배경 — 세로형 9:16)
-     map_bg.jpg     (홈/지도 화면 배경 — 무인도 지도/그림, 가로형)
+     title_bg.png   (첫 화면 배경 — 세로형 9:16)
+     map_bg.png     (홈/지도 화면 배경 — 무인도 지도/그림, 가로형)
 
    장소 배경 이미지 파일명(가로형 권장):
-     loc_beach.jpg        (해변)
-     loc_camp.jpg         (캠프)
-     loc_forest.jpg       (숲)
-     loc_den.jpg          (강아지 은신처)
-     loc_cliff.jpg        (절벽)
-     loc_workshop.jpg     (AI 정비소)
-     loc_observatory.jpg  (버려진 관측소)
+     loc_beach.png        (해변)
+     loc_camp.png         (캠프)
+     loc_forest.png       (숲)
+     loc_den.png          (강아지 은신처)
+     loc_cliff.png        (절벽)
+     loc_workshop.png     (AI 정비소)
+     loc_observatory.png  (버려진 관측소)
    ※ index.html 과 같은 폴더에 두면 IMG_BASE 가 비어 있어도 바로 적용됩니다.
      없으면 기존 그라데이션 배경으로 자동 대체됩니다.
    ============================================================ */
 const IMG_BASE = ""; // 예: "https://raw.githubusercontent.com/yourname/island-game/main/img/"
-const TITLE_BG = "title_bg.jpg"; // 첫 화면 배경
-const MAP_BG   = "map_bg.jpg";   // 홈(지도) 화면 배경
+const TITLE_BG = "title_bg.png"; // 첫 화면 배경
+const MAP_BG   = "map_bg.png";   // 홈(지도) 화면 배경
 
 /* ============================================================
    상태
@@ -1191,13 +1191,13 @@ const LOC_DESC = {
 
 /* 장소별 배경 이미지 파일명 */
 const LOC_BG = {
-  beach:"loc_beach.jpg",
-  camp:"loc_camp.jpg",
-  forest:"loc_forest.jpg",
-  den:"loc_den.jpg",
-  cliff:"loc_cliff.jpg",
-  workshop:"loc_workshop.jpg",
-  observatory:"loc_observatory.jpg",
+  beach:"loc_beach.png",
+  camp:"loc_camp.png",
+  forest:"loc_forest.png",
+  den:"loc_den.png",
+  cliff:"loc_cliff.png",
+  workshop:"loc_workshop.png",
+  observatory:"loc_observatory.png",
 };
 
 /* 장소 배경 적용 — 파일이 없으면 기본 그라데이션 배경 유지 */
